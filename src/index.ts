@@ -6,9 +6,11 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
 import { getConfig, validateConfig } from './config.js';
 import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
+import { searchCode } from './tools/search/code.js';
 
 // Get and validate configuration
 const config = getConfig();
@@ -35,6 +37,34 @@ server.tool(
         {
           type: 'text',
           text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  }
+);
+
+server.tool(
+  'search_code',
+  'Search for code in Sourcegraph using advanced query syntax. Supports filters like repo:, lang:, file:, etc.',
+  {
+    query: z.string().describe('The search query (e.g., "repo:myrepo function auth")'),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(100)
+      .optional()
+      .describe('Maximum number of results (default: 10)'),
+  },
+  async (args) => {
+    const { query, limit } = args as { query: string; limit?: number };
+    const result = await searchCode(sgClient, { query, limit });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result,
         },
       ],
     };
