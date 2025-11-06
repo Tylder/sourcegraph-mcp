@@ -8,6 +8,16 @@
 - **Tool Organization**: Categorized with prefixes
 - **Error Handling**: Graceful degradation
 - **Configuration**: Environment variables (`SRC_ENDPOINT`, `SRC_ACCESS_TOKEN`)
+- **Transport Mode**: stdio (default) - HTTP/SSE mode planned for Phase 6
+
+### Future: HTTP/SSE Transport (Phase 6)
+
+Currently uses stdio transport (spawned on-demand by agent). HTTP/SSE mode will be added later for:
+- Always-on server (docker-compose)
+- Multi-client support
+- Connection pooling/caching
+
+Configuration will support both modes via `MCP_TRANSPORT` env var.
 
 ## Complete Tool List
 

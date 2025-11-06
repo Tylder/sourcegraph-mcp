@@ -106,15 +106,56 @@ Optional:
 
 ### Development Workflow
 
+#### When to Run Pre-commit Checks
+
+**Run checks after each tool implementation** (before moving to next tool):
+
+1. **Implement tool**: Complete one tool function + GraphQL query + types
+2. **Register tool**: Update index.ts to register the tool
+3. **→ RUN CHECKS**: `npm run format && npm run lint && npm run typecheck`
+4. **Fix issues**: Address any errors while context is fresh
+5. **Move to next tool**: Repeat for next tool
+6. **After 2-3 tools**: Write tests, run `npm test`
+7. **Commit batch**: Commit logical units (e.g., "Add all search tools")
+
+**Do NOT run checks:**
+- After every single file (too frequent, code often incomplete)
+- Only before commit (too late, hard to debug)
+
+**Example workflow:**
+```bash
+# Implement search_code tool
+# → npm run format && npm run lint && npm run typecheck
+# Fix any issues
+
+# Implement search_symbols tool  
+# → npm run format && npm run lint && npm run typecheck
+# Fix any issues
+
+# Implement search_commits tool
+# → npm run format && npm run lint && npm run typecheck
+# Fix any issues
+
+# Write tests for all 3 search tools
+# → npm test
+# Fix test failures
+
+# Commit: "Add Phase 1 search tools"
+git add -A
+git commit -m "feat: add search_code, search_symbols, search_commits tools"
+```
+
+#### Full Development Checklist
+
 1. **Before coding**: Read SPEC.md for tool requirements
-2. **Write tests first**: TDD approach for all tools
-3. **Implement tool**: Follow existing patterns
-4. **Run tests locally**: `npm test`
-5. **Check coverage**: `npm run coverage`
-6. **Lint and format**: `npm run lint && npm run format`
+2. **Implement tool**: Follow existing patterns
+3. **Run checks**: `npm run format && npm run lint && npm run typecheck`
+4. **Fix issues**: Address errors immediately
+5. **After 2-3 tools**: Write tests (`npm test`)
+6. **Check coverage**: `npm run coverage`
 7. **Build**: `npm run build`
-8. **Commit**: Git hooks will run automatically
-9. **Push**: Pre-push hooks verify everything passes
+8. **Commit**: Git hooks will run automatically (all checks pass)
+9. **Push**: Pre-push hooks verify coverage and build
 10. **PR**: CI/CD must pass before merge
 
 ### Common Commands
