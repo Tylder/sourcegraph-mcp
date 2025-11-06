@@ -112,11 +112,11 @@ Optional:
 
 1. **Implement tool**: Complete one tool function + GraphQL query + types
 2. **Register tool**: Update index.ts to register the tool
-3. **→ RUN CHECKS**: `npm run format && npm run lint && npm run typecheck`
-4. **Fix issues**: Address any errors while context is fresh
-5. **Move to next tool**: Repeat for next tool
-6. **After 2-3 tools**: Write tests, run `npm test`
-7. **Commit batch**: Commit logical units (e.g., "Add all search tools")
+3. **→ RUN PRE-COMMIT CHECKS**: `npm run format && npm run lint && npm run typecheck`
+4. **→ RUN PRE-PUSH CHECKS**: `npm run coverage && npm run build`
+5. **Fix issues**: Address any errors AND low coverage while context is fresh
+6. **Move to next tool**: Repeat for next tool
+7. **After 2-3 tools**: Commit logical units (e.g., "Add all search tools")
 
 **Do NOT run checks:**
 - After every single file (too frequent, code often incomplete)
@@ -124,39 +124,43 @@ Optional:
 
 **Example workflow:**
 ```bash
-# Implement search_code tool
+# Implement search_code tool + write tests
 # → npm run format && npm run lint && npm run typecheck
-# Fix any issues
+# → npm run coverage && npm run build
+# Fix any issues + ensure 80%+ coverage
 
-# Implement search_symbols tool  
+# Implement search_symbols tool + write tests
 # → npm run format && npm run lint && npm run typecheck
-# Fix any issues
+# → npm run coverage && npm run build
+# Fix any issues + ensure 80%+ coverage
 
-# Implement search_commits tool
+# Implement search_commits tool + write tests
 # → npm run format && npm run lint && npm run typecheck
-# Fix any issues
-
-# Write tests for all 3 search tools
-# → npm test
-# Fix test failures
+# → npm run coverage && npm run build
+# Fix any issues + ensure 80%+ coverage
 
 # Commit: "Add Phase 1 search tools"
 git add -A
 git commit -m "feat: add search_code, search_symbols, search_commits tools"
 ```
 
+**Why run pre-push checks early?**
+- Catches coverage gaps while context is fresh
+- Surfaces missing tests immediately (easier to fix)
+- Verifies build succeeds with new code
+- Prevents "write all code, test later" anti-pattern
+
 #### Full Development Checklist
 
 1. **Before coding**: Read SPEC.md for tool requirements
-2. **Implement tool**: Follow existing patterns
-3. **Run checks**: `npm run format && npm run lint && npm run typecheck`
-4. **Fix issues**: Address errors immediately
-5. **After 2-3 tools**: Write tests (`npm test`)
-6. **Check coverage**: `npm run coverage`
-7. **Build**: `npm run build`
-8. **Commit**: Git hooks will run automatically (all checks pass)
-9. **Push**: Pre-push hooks verify coverage and build
-10. **PR**: CI/CD must pass before merge
+2. **Implement tool + tests**: Follow existing patterns, write tests immediately
+3. **Run pre-commit checks**: `npm run format && npm run lint && npm run typecheck`
+4. **Run pre-push checks**: `npm run coverage && npm run build`
+5. **Fix issues**: Address errors and coverage gaps immediately
+6. **Repeat**: Continue for next tool
+7. **Commit batch**: After 2-3 tools, commit logical unit
+8. **Push**: Pre-push hooks verify coverage and build (should already pass)
+9. **PR**: CI/CD must pass before merge
 
 ### Common Commands
 
