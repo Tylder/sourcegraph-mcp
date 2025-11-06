@@ -1,12 +1,59 @@
 {
   "name": "sourcegraph-mcp",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "version": "0.1.0",
+  "description": "A comprehensive Model Context Protocol (MCP) server for Sourcegraph code search and intelligence",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "sourcegraph-mcp": "./dist/index.js"
   },
-  "keywords": [],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky",
+    "prepublishOnly": "npm run build && npm run test && npm run lint"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "sourcegraph",
+    "code-search",
+    "code-intelligence",
+    "ai",
+    "llm"
+  ],
   "author": "",
-  "license": "ISC"
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.21.0",
+    "graphql": "16.12.0",
+    "graphql-request": "7.3.1",
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "@types/node": "22.13.12",
+    "@vitest/coverage-v8": "4.0.7",
+    "eslint": "9.39.1",
+    "husky": "9.1.7",
+    "lint-staged": "15.3.1",
+    "prettier": "3.6.2",
+    "tsx": "4.21.3",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.46.3",
+    "vitest": "4.0.7"
+  }
 }
