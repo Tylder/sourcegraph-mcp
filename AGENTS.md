@@ -20,11 +20,18 @@ A comprehensive Model Context Protocol (MCP) server providing AI agents with acc
 **MANDATORY**: This project must be fully tested before any code is merged.
 
 #### Test Coverage Requirements
-- Minimum 80% code coverage for all modules
+- **Target: 100% code coverage** for all modules (statements, branches, functions, lines)
+- Minimum 80% if 100% is not achievable without hacks or testing implementation details
 - 100% coverage for critical paths (authentication, API calls)
 - Unit tests for all tools
 - Integration tests for GraphQL queries
 - E2E tests for full tool workflows
+
+**Coverage Philosophy:**
+- Aim for 100% coverage by testing all realistic code paths
+- Do NOT use hacks or contortions to hit 100% (e.g., testing private methods, artificial branches)
+- If a branch is truly unreachable or testing it requires ugly mocks, document why and accept <100%
+- If you can't reach 100% easily, ensure you have at least 80% and all critical paths covered
 
 #### Git Hooks (Husky)
 Pre-commit hooks must:
