@@ -11,6 +11,7 @@ import { getConfig, validateConfig } from './config.js';
 import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
 import { searchCode } from './tools/search/code.js';
+import { searchSymbols } from './tools/search/symbols.js';
 
 // Get and validate configuration
 const config = getConfig();
@@ -59,6 +60,42 @@ server.tool(
   async (args) => {
     const { query, limit } = args as { query: string; limit?: number };
     const result = await searchCode(sgClient, { query, limit });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result,
+        },
+      ],
+    };
+  }
+);
+
+server.tool(
+  'search_symbols',
+  'Search for symbols (functions, classes, variables, etc.) in Sourcegraph',
+  {
+    query: z.string().describe('The search query (e.g., "repo:myrepo authenticate")'),
+    types: z
+      .array(z.string())
+      .optional()
+      .describe('Symbol types to filter (e.g., ["function", "class", "variable"])'),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(100)
+      .optional()
+      .describe('Maximum number of results (default: 10)'),
+  },
+  async (args) => {
+    const { query, types, limit } = args as {
+      query: string;
+      types?: string[];
+      limit?: number;
+    };
+    const result = await searchSymbols(sgClient, { query, types, limit });
 
     return {
       content: [
