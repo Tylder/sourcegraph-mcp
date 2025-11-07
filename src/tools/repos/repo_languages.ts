@@ -10,11 +10,18 @@ interface LanguageStatisticNode {
   percentage?: number | null;
 }
 
+interface RepositoryLanguageSummary {
+  name: string;
+}
+
+interface RepositoryLanguageStatistics extends RepositoryLanguageSummary {
+  languageStatistics: LanguageStatisticNode[] | null;
+}
+
+type RepoLanguagesRepository = RepositoryLanguageSummary | RepositoryLanguageStatistics;
+
 interface RepoLanguagesResponse {
-  repository: {
-    name: string;
-    languageStatistics?: LanguageStatisticNode[] | null;
-  } | null;
+  repository: RepoLanguagesRepository | null;
 }
 
 export interface RepoLanguagesParams {
@@ -41,6 +48,12 @@ export interface RepoLanguagesResult {
   revision: string;
   totalBytes: number;
   languages: RepoLanguageBreakdown[];
+}
+
+function supportsLanguageStatistics(
+  repository: RepoLanguagesRepository
+): repository is RepositoryLanguageStatistics {
+  return 'languageStatistics' in repository;
 }
 
 function isFiniteNumber(value: unknown): value is number {
@@ -202,6 +215,13 @@ export async function repoLanguages(
       return `Repository not found: ${repo}`;
     }
 
+    if (!supportsLanguageStatistics(repository)) {
+      return [
+        `Language statistics are not supported for ${repo} at ${revision}.`,
+        'This Sourcegraph instance does not expose per-language usage data in the current schema.',
+      ].join(' ');
+    }
+
     const stats = repository.languageStatistics ?? [];
     const result = buildBreakdown(repo, revision, stats);
 
@@ -215,4 +235,5 @@ export async function repoLanguages(
 export const __internal = {
   normalizeShares,
   buildBreakdown,
+  supportsLanguageStatistics,
 };

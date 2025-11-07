@@ -8,42 +8,41 @@ import type { SourcegraphClient } from '../../../src/graphql/client.js';
 
 describe('repoLanguages', () => {
   it('returns normalized language breakdown as JSON', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: {
-          name: 'github.com/sourcegraph/sourcegraph',
-          languageStatistics: [
-            {
-              name: 'TypeScript',
-              displayName: 'TypeScript',
-              color: '#3178c6',
-              totalBytes: 1500,
-              totalLines: 100,
-            },
-            {
-              name: 'Go',
-              displayName: 'Go',
-              color: '#00ADD8',
-              totalBytes: 500,
-              totalLines: 40,
-            },
-            {
-              name: 'JSON',
-              displayName: 'JSON',
-              color: '#292929',
-              totalBytes: 200,
-            },
-          ],
-        },
-      }),
-    } as unknown as SourcegraphClient;
+    const query = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'github.com/sourcegraph/sourcegraph',
+        languageStatistics: [
+          {
+            name: 'TypeScript',
+            displayName: 'TypeScript',
+            color: '#3178c6',
+            totalBytes: 1500,
+            totalLines: 100,
+          },
+          {
+            name: 'Go',
+            displayName: 'Go',
+            color: '#00ADD8',
+            totalBytes: 500,
+            totalLines: 40,
+          },
+          {
+            name: 'JSON',
+            displayName: 'JSON',
+            color: '#292929',
+            totalBytes: 200,
+          },
+        ],
+      },
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const response = await repoLanguages(mockClient, {
       repo: 'github.com/sourcegraph/sourcegraph',
       rev: 'main',
     });
 
-    expect(mockClient.query).toHaveBeenCalledWith(expect.any(String), {
+    expect(query).toHaveBeenCalledWith(expect.any(String), {
       name: 'github.com/sourcegraph/sourcegraph',
     });
 
@@ -53,11 +52,7 @@ describe('repoLanguages', () => {
     expect(parsed.revision).toBe('main');
     expect(parsed.totalBytes).toBe(2200);
     expect(parsed.languages).toHaveLength(3);
-    expect(parsed.languages.map((language) => language.name)).toEqual([
-      'TypeScript',
-      'Go',
-      'JSON',
-    ]);
+    expect(parsed.languages.map((language) => language.name)).toEqual(['TypeScript', 'Go', 'JSON']);
 
     const totalRatio = parsed.languages.reduce(
       (sum: number, language: { share: { ratio: number } }) => sum + language.share.ratio,
@@ -121,6 +116,25 @@ describe('repoLanguages', () => {
     const parsed = JSON.parse(response) as RepoLanguagesResult;
     expect(parsed.totalBytes).toBe(0);
     expect(parsed.languages).toEqual([]);
+  });
+
+  it('indicates when language statistics are unsupported', async () => {
+    const mockClient = {
+      query: vi.fn().mockResolvedValue({
+        repository: {
+          name: 'github.com/example/unsupported',
+        },
+      }),
+    } as unknown as SourcegraphClient;
+
+    const response = await repoLanguages(mockClient, {
+      repo: 'github.com/example/unsupported',
+      rev: 'deadbeef',
+    });
+
+    expect(response).toContain('Language statistics are not supported');
+    expect(response).toContain('github.com/example/unsupported');
+    expect(response).toContain('deadbeef');
   });
 
   it('returns error message when repository is missing', async () => {
