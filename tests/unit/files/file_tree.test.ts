@@ -28,11 +28,11 @@ describe('normalizeTreePath', () => {
 
 describe('getFileTree', () => {
   it('builds nested directory structures recursively', async () => {
-    const queryMock = vi.fn(async (_query: string, variables: { path: string }) => {
+    const queryMock = vi.fn((_query: string, variables: { path: string }) => {
       const path = variables.path;
 
       if (path === '') {
-        return {
+        return Promise.resolve({
           repository: {
             name: 'github.com/test/repo',
             commit: {
@@ -59,11 +59,11 @@ describe('getFileTree', () => {
               },
             },
           },
-        };
+        });
       }
 
       if (path === 'src') {
-        return {
+        return Promise.resolve({
           repository: {
             name: 'github.com/test/repo',
             commit: {
@@ -90,11 +90,11 @@ describe('getFileTree', () => {
               },
             },
           },
-        };
+        });
       }
 
       if (path === 'src/utils') {
-        return {
+        return Promise.resolve({
           repository: {
             name: 'github.com/test/repo',
             commit: {
@@ -113,7 +113,7 @@ describe('getFileTree', () => {
               },
             },
           },
-        };
+        });
       }
 
       throw new Error(`Unexpected path: ${path}`);
@@ -170,14 +170,11 @@ describe('getFileTree', () => {
 
   it('surfaces file metadata and submodules from the tree', async () => {
     const queryMock = vi.fn(
-      async (
-        _query: string,
-        variables: { path: string; repo: string; rev: string }
-      ) => {
+      (_query: string, variables: { path: string; repo: string; rev: string }) => {
         expect(variables.repo).toBe('github.com/test/repo');
         expect(variables.rev).toBe('HEAD');
 
-        return {
+        return Promise.resolve({
           repository: {
             name: 'github.com/test/repo',
             commit: {
@@ -199,13 +196,12 @@ describe('getFileTree', () => {
                     isDirectory: false,
                     isSingleChild: false,
                     submodule: null,
-                    byteSize: 123,
                   },
                 ],
               },
             },
           },
-        };
+        });
       }
     );
 
@@ -227,16 +223,15 @@ describe('getFileTree', () => {
         name: 'package.json',
         path: 'package.json',
         url: 'https://example.com/blob/package.json',
-        byteSize: 123,
       },
     ]);
     expect(result.directories).toHaveLength(0);
   });
 
   it('handles directories with no entries', async () => {
-    const queryMock = vi.fn(async (_query: string, variables: { path: string; rev: string }) => {
+    const queryMock = vi.fn((_query: string, variables: { path: string; rev: string }) => {
       expect(variables.rev).toBe('feature');
-      return {
+      return Promise.resolve({
         repository: {
           name: 'github.com/test/repo',
           commit: {
@@ -246,7 +241,7 @@ describe('getFileTree', () => {
             },
           },
         },
-      };
+      });
     });
 
     const client = { query: queryMock } as unknown as SourcegraphClient;
@@ -288,7 +283,9 @@ describe('getFileTree', () => {
       }),
     } as unknown as SourcegraphClient;
 
-    await expect(getFileTree(client, { repo: 'github.com/test/repo', rev: 'bad-commit' })).rejects.toMatchObject({
+    await expect(
+      getFileTree(client, { repo: 'github.com/test/repo', rev: 'bad-commit' })
+    ).rejects.toMatchObject({
       code: 'REVISION_NOT_FOUND',
       message: 'Revision not found: bad-commit',
     });
@@ -304,7 +301,9 @@ describe('getFileTree', () => {
       }),
     } as unknown as SourcegraphClient;
 
-    await expect(getFileTree(client, { repo: 'github.com/test/repo', path: 'missing' })).rejects.toMatchObject({
+    await expect(
+      getFileTree(client, { repo: 'github.com/test/repo', path: 'missing' })
+    ).rejects.toMatchObject({
       code: 'PATH_NOT_FOUND',
       message: 'Path not found: missing',
     });
