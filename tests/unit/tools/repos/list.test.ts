@@ -109,6 +109,36 @@ describe('repoList', () => {
     expect(result).toContain('Next Page Cursor: next-cursor');
   });
 
+  it('should omit status line when repository has no flags set', async () => {
+    const mockClient = {
+      query: vi.fn().mockResolvedValue({
+        repositories: {
+          nodes: [
+            {
+              name: 'github.com/example/repo',
+              url: 'https://sourcegraph.com/github.com/example/repo',
+              description: 'Simple repo',
+              isPrivate: false,
+              isFork: false,
+              isArchived: false,
+              viewerCanAdminister: false,
+              defaultBranch: { displayName: 'main' },
+              mirrorInfo: null,
+              updatedAt: '2024-02-03T00:00:00Z',
+            },
+          ],
+          totalCount: 1,
+          pageInfo: { hasNextPage: false, endCursor: null },
+        },
+      }),
+    } as unknown as SourcegraphClient;
+
+    const result = await repoList(mockClient, {});
+
+    expect(result).not.toContain('Status:');
+    expect(result).toContain('Default Branch: main');
+  });
+
   it('should handle empty results', async () => {
     const mockClient = {
       query: vi.fn().mockResolvedValue({

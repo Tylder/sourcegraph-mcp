@@ -176,6 +176,16 @@ describe('repoBranches', () => {
     expect(result).toContain('Error fetching branches: GraphQL error');
   });
 
+  it('should handle non-Error rejections gracefully', async () => {
+    const mockClient = {
+      query: vi.fn().mockRejectedValue('rate limited'),
+    } as unknown as SourcegraphClient;
+
+    const result = await repoBranches(mockClient, { repo: 'repo' });
+
+    expect(result).toContain('Error fetching branches: rate limited');
+  });
+
   it('should handle branches missing optional fields', async () => {
     const mockClient = {
       query: vi.fn().mockResolvedValue({
