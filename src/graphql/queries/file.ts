@@ -13,10 +13,9 @@ export const FILE_CONTENT_QUERY = `
           path
           content
           byteSize
-          isBinary
+          binary
           highlight(disableTimeout: false) {
             aborted
-            language
           }
         }
       }

@@ -69,7 +69,7 @@ export const REPO_BRANCHES_QUERY = `
         nodes {
           name
           displayName
-          abbreviatedName
+          abbrevName
           url
           target {
             oid
