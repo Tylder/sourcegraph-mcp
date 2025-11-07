@@ -12,6 +12,7 @@ import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
 import { searchCode } from './tools/search/code.js';
 import { searchSymbols } from './tools/search/symbols.js';
+import { searchCommits } from './tools/search/commits.js';
 
 // Get and validate configuration
 const config = getConfig();
@@ -104,6 +105,54 @@ server.tool(
       limit?: number;
     };
     const result = await searchSymbols(sgClient, { query, types, limit });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: result,
+        },
+      ],
+    };
+  }
+);
+
+const searchCommitsSchema: Record<string, ZodTypeAny> = {
+  query: z.string().describe('Commit search query (e.g., "repo:myrepo fix bug")'),
+  author: z.string().optional().describe('Filter by commit author (name or email)'),
+  after: z.string().optional().describe('Filter commits after this date (e.g., "2024-01-01")'),
+  before: z.string().optional().describe('Filter commits before this date (e.g., "2024-02-01")'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe('Maximum number of commits (default: 20)'),
+};
+
+server.tool(
+  'search_commits',
+  'Search git commit messages and diffs in Sourcegraph',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  searchCommitsSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
+    const { query, author, after, before, limit } = args as {
+      query: string;
+      author?: string;
+      after?: string;
+      before?: string;
+      limit?: number;
+    };
+
+    const result = await searchCommits(sgClient, {
+      query,
+      author,
+      after,
+      before,
+      limit,
+    });
 
     return {
       content: [
