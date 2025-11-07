@@ -12,6 +12,7 @@ import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
 import { searchCode } from './tools/search/code.js';
 import { searchSymbols } from './tools/search/symbols.js';
+import { fileTree } from './tools/files/tree.js';
 
 // Get and validate configuration
 const config = getConfig();
@@ -104,6 +105,33 @@ server.tool(
       limit?: number;
     };
     const result = await searchSymbols(sgClient, { query, types, limit });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: result,
+        },
+      ],
+    };
+  }
+);
+
+const fileTreeSchema: Record<string, ZodTypeAny> = {
+  repo: z.string().describe('The repository name (e.g., "github.com/sourcegraph/sourcegraph")'),
+  path: z.string().optional().describe('Directory path within the repository (default: root)'),
+  rev: z.string().optional().describe('Repository revision/branch (default: HEAD)'),
+};
+
+server.tool(
+  'file_tree',
+  'Browse the directory structure of a repository at a given revision and path.',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fileTreeSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
+    const { repo, path, rev } = args as { repo: string; path?: string; rev?: string };
+    const result = await fileTree(sgClient, { repo, path, rev });
 
     return {
       content: [
