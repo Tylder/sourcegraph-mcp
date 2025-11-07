@@ -12,6 +12,7 @@ import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
 import { searchCode } from './tools/search/code.js';
 import { searchSymbols } from './tools/search/symbols.js';
+import { repoInfo } from './tools/repos/info.js';
 
 // Get and validate configuration
 const config = getConfig();
@@ -104,6 +105,34 @@ server.tool(
       limit?: number;
     };
     const result = await searchSymbols(sgClient, { query, types, limit });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: result,
+        },
+      ],
+    };
+  }
+);
+
+const repoInfoSchema: Record<string, ZodTypeAny> = {
+  name: z
+    .string()
+    .min(1)
+    .describe('Full repository name (e.g., "github.com/sourcegraph/sourcegraph")'),
+};
+
+server.tool(
+  'repo_info',
+  'Get detailed information about a Sourcegraph repository including clone status and metadata',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  repoInfoSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
+    const { name } = args as { name: string };
+    const result = await repoInfo(sgClient, { name });
 
     return {
       content: [
