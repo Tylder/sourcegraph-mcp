@@ -3,7 +3,7 @@
  */
 
 export const FILE_BLAME_QUERY = `
-  query FileBlame($repo: String!, $path: String!, $rev: String, $startLine: Int, $endLine: Int) {
+  query FileBlame($repo: String!, $path: String!, $rev: String!, $startLine: Int, $endLine: Int) {
     repository(name: $repo) {
       name
       url
@@ -12,22 +12,20 @@ export const FILE_BLAME_QUERY = `
         blob(path: $path) {
           path
           blame(startLine: $startLine, endLine: $endLine) {
-            ranges {
-              startLine
-              endLine
-              author {
-                date
-                person {
-                  displayName
-                  email
-                }
+            startLine
+            endLine
+            author {
+              date
+              person {
+                displayName
+                email
               }
-              commit {
-                oid
-                abbreviatedOID
-                url
-                subject
-              }
+            }
+            commit {
+              oid
+              abbreviatedOID
+              url
+              subject
             }
           }
         }

@@ -30,20 +30,16 @@ interface BlameCommit {
   subject: string | null;
 }
 
-interface BlameRange {
+interface BlameHunk {
   startLine: number;
   endLine: number;
   author: BlameAuthor | null;
   commit: BlameCommit | null;
 }
 
-interface BlameData {
-  ranges: BlameRange[];
-}
-
 interface FileBlameBlob {
   path: string | null;
-  blame: BlameData | null;
+  blame: BlameHunk[] | null;
 }
 
 interface FileBlameCommit {
@@ -63,9 +59,9 @@ interface FileBlameResponse {
 
 const HEADER_SEPARATOR = '------------------------------------';
 
-function formatAuthor(range: BlameRange): string {
-  const displayName = range.author?.person?.displayName?.trim();
-  const email = range.author?.person?.email?.trim();
+function formatAuthor(hunk: BlameHunk): string {
+  const displayName = hunk.author?.person?.displayName?.trim();
+  const email = hunk.author?.person?.email?.trim();
   const name = displayName ?? email ?? 'Unknown author';
   const emailSuffix = email ? ` <${email}>` : '';
   return `${name}${emailSuffix}`;
@@ -88,17 +84,15 @@ export async function fileBlame(
   const variables: {
     repo: string;
     path: string;
-    rev?: string;
+    rev: string;
     startLine?: number;
     endLine?: number;
   } = {
     repo,
     path,
+    rev: rev ?? 'HEAD',
   };
 
-  if (rev) {
-    variables.rev = rev;
-  }
   if (typeof startLine === 'number') {
     variables.startLine = startLine;
   }
@@ -135,21 +129,21 @@ export async function fileBlame(
       `Revision OID: ${commit.oid}`,
     ];
 
-    if (!blame || blame.ranges.length === 0) {
+    if (!Array.isArray(blame) || blame.length === 0) {
       metadataLines.push('', 'No blame information available for the requested range.');
       return metadataLines.join('\n');
     }
 
     metadataLines.push('', 'Line Range | Commit | Author | Date', HEADER_SEPARATOR);
 
-    for (const range of blame.ranges) {
-      const commitInfo = range.commit;
+    for (const hunk of blame) {
+      const commitInfo = hunk.commit;
       const commitLabel = commitInfo?.abbreviatedOID ?? commitInfo?.oid ?? 'unknown';
       const subject = commitInfo?.subject?.trim();
-      const author = formatAuthor(range);
-      const timestamp = formatDate(range.author?.date);
+      const author = formatAuthor(hunk);
+      const timestamp = formatDate(hunk.author?.date);
       metadataLines.push(
-        `${String(range.startLine)}-${String(range.endLine)} | ${commitLabel} | ${author} | ${timestamp}`
+        `${String(hunk.startLine)}-${String(hunk.endLine)} | ${commitLabel} | ${author} | ${timestamp}`
       );
       if (subject && subject.length > 0) {
         metadataLines.push(`  ${subject}`);

@@ -12,44 +12,42 @@ describe('fileBlame', () => {
           oid: 'abcdef1234567890',
           blob: {
             path: null,
-            blame: {
-              ranges: [
-                {
-                  startLine: 1,
-                  endLine: 2,
-                  author: {
-                    date: '2024-01-01T00:00:00Z',
-                    person: {
-                      displayName: 'Alice',
-                      email: 'alice@example.com',
-                    },
-                  },
-                  commit: {
-                    oid: 'abcdef1234567890abcdef1234567890abcdef12',
-                    abbreviatedOID: 'abcdef1',
-                    url: 'https://example.com/commit/abcdef1',
-                    subject: 'Initial commit',
+            blame: [
+              {
+                startLine: 1,
+                endLine: 2,
+                author: {
+                  date: '2024-01-01T00:00:00Z',
+                  person: {
+                    displayName: 'Alice',
+                    email: 'alice@example.com',
                   },
                 },
-                {
-                  startLine: 3,
-                  endLine: 3,
-                  author: {
-                    date: '2024-01-02T12:34:56Z',
-                    person: {
-                      displayName: null,
-                      email: 'bob@example.com',
-                    },
-                  },
-                  commit: {
-                    oid: 'fedcba0987654321fedcba0987654321fedcba09',
-                    abbreviatedOID: null,
-                    url: ' ',
-                    subject: '  ',
+                commit: {
+                  oid: 'abcdef1234567890abcdef1234567890abcdef12',
+                  abbreviatedOID: 'abcdef1',
+                  url: 'https://example.com/commit/abcdef1',
+                  subject: 'Initial commit',
+                },
+              },
+              {
+                startLine: 3,
+                endLine: 3,
+                author: {
+                  date: '2024-01-02T12:34:56Z',
+                  person: {
+                    displayName: null,
+                    email: 'bob@example.com',
                   },
                 },
-              ],
-            },
+                commit: {
+                  oid: 'fedcba0987654321fedcba0987654321fedcba09',
+                  abbreviatedOID: null,
+                  url: ' ',
+                  subject: '  ',
+                },
+              },
+            ],
           },
         },
       },
@@ -151,9 +149,7 @@ describe('fileBlame', () => {
             oid: 'abcdef',
             blob: {
               path: 'src/index.ts',
-              blame: {
-                ranges: [],
-              },
+              blame: [],
             },
           },
         },
@@ -179,16 +175,14 @@ describe('fileBlame', () => {
             oid: 'abcdef',
             blob: {
               path: 'src/index.ts',
-              blame: {
-                ranges: [
-                  {
-                    startLine: 4,
-                    endLine: 4,
-                    author: null,
-                    commit: null,
-                  },
-                ],
-              },
+              blame: [
+                {
+                  startLine: 4,
+                  endLine: 4,
+                  author: null,
+                  commit: null,
+                },
+              ],
             },
           },
         },
@@ -200,9 +194,7 @@ describe('fileBlame', () => {
       path: 'src/index.ts',
     });
 
-    expect(result).toContain(
-      '4 | unknown | Unknown author | Unknown date | No subject | No URL'
-    );
+    expect(result).toContain('4 | unknown | Unknown author | Unknown date | No subject | No URL');
   });
 
   it('retains original value when author date cannot be parsed', async () => {
@@ -215,24 +207,22 @@ describe('fileBlame', () => {
             oid: 'abcdef',
             blob: {
               path: 'src/index.ts',
-              blame: {
-                ranges: [
-                  {
-                    startLine: 5,
-                    endLine: 5,
-                    author: {
-                      date: 'not-a-date',
-                      person: null,
-                    },
-                    commit: {
-                      oid: '1234567890abcdef1234567890abcdef12345678',
-                      abbreviatedOID: '1234567',
-                      url: 'https://example.com/commit/1234567',
-                      subject: 'Refactor module',
-                    },
+              blame: [
+                {
+                  startLine: 5,
+                  endLine: 5,
+                  author: {
+                    date: 'not-a-date',
+                    person: null,
                   },
-                ],
-              },
+                  commit: {
+                    oid: '1234567890abcdef1234567890abcdef12345678',
+                    abbreviatedOID: '1234567',
+                    url: 'https://example.com/commit/1234567',
+                    subject: 'Refactor module',
+                  },
+                },
+              ],
             },
           },
         },
@@ -259,16 +249,14 @@ describe('fileBlame', () => {
             oid: 'abcdef',
             blob: {
               path: 'src/index.ts',
-              blame: {
-                ranges: [
-                  {
-                    startLine: Number.NaN,
-                    endLine: Number.NaN,
-                    author: null,
-                    commit: null,
-                  },
-                ],
-              },
+              blame: [
+                {
+                  startLine: Number.NaN,
+                  endLine: Number.NaN,
+                  author: null,
+                  commit: null,
+                },
+              ],
             },
           },
         },
@@ -334,27 +322,25 @@ describe('fileBlame', () => {
           oid: 'abcdef',
           blob: {
             path: 'src/index.ts',
-            blame: {
-              ranges: [
-                {
-                  startLine: 5,
-                  endLine: 5,
-                  author: {
-                    date: '2024-01-01T00:00:00Z',
-                    person: {
-                      displayName: 'Alice',
-                      email: 'alice@example.com',
-                    },
-                  },
-                  commit: {
-                    oid: 'abcdef',
-                    abbreviatedOID: 'abcdef',
-                    url: 'https://example.com/commit/abcdef',
-                    subject: 'Feature work',
+            blame: [
+              {
+                startLine: 5,
+                endLine: 5,
+                author: {
+                  date: '2024-01-01T00:00:00Z',
+                  person: {
+                    displayName: 'Alice',
+                    email: 'alice@example.com',
                   },
                 },
-              ],
-            },
+                commit: {
+                  oid: 'abcdef',
+                  abbreviatedOID: 'abcdef',
+                  url: 'https://example.com/commit/abcdef',
+                  subject: 'Feature work',
+                },
+              },
+            ],
           },
         },
       },
@@ -371,6 +357,7 @@ describe('fileBlame', () => {
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
       repo: 'github.com/test/repo',
       path: 'src/index.ts',
+      rev: 'HEAD',
       startLine: 5,
       endLine: 10,
     });

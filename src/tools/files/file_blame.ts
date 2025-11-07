@@ -30,20 +30,16 @@ interface BlameCommit {
   subject: string | null;
 }
 
-interface BlameRange {
+interface BlameHunk {
   startLine: number;
   endLine: number;
   author: BlameAuthor | null;
   commit: BlameCommit | null;
 }
 
-interface BlameData {
-  ranges: BlameRange[];
-}
-
 interface FileBlameBlob {
   path: string | null;
-  blame: BlameData | null;
+  blame: BlameHunk[] | null;
 }
 
 interface FileBlameCommit {
@@ -64,9 +60,9 @@ interface FileBlameResponse {
 const TABLE_HEADER = 'Line | Commit | Author | Date | Subject | URL';
 const HEADER_SEPARATOR = '-'.repeat(TABLE_HEADER.length);
 
-function formatAuthor(range: BlameRange): string {
-  const displayName = range.author?.person?.displayName?.trim();
-  const email = range.author?.person?.email?.trim();
+function formatAuthor(hunk: BlameHunk): string {
+  const displayName = hunk.author?.person?.displayName?.trim();
+  const email = hunk.author?.person?.email?.trim();
   const name = displayName ?? email ?? 'Unknown author';
   const emailSuffix = email ? ` <${email}>` : '';
   return `${name}${emailSuffix}`;
@@ -96,8 +92,8 @@ function formatUrl(url: string | null | undefined): string {
   return trimmed.length > 0 ? trimmed : 'No URL';
 }
 
-function isValidRange(range: BlameRange): boolean {
-  return Number.isFinite(range.startLine) && Number.isFinite(range.endLine);
+function isValidHunk(hunk: BlameHunk): boolean {
+  return Number.isFinite(hunk.startLine) && Number.isFinite(hunk.endLine);
 }
 
 export async function fileBlame(
@@ -119,17 +115,15 @@ export async function fileBlame(
   const variables: {
     repo: string;
     path: string;
-    rev?: string;
+    rev: string;
     startLine?: number;
     endLine?: number;
   } = {
     repo,
     path,
+    rev: rev ?? 'HEAD',
   };
 
-  if (rev) {
-    variables.rev = rev;
-  }
   if (typeof startLine === 'number' && Number.isFinite(startLine)) {
     variables.startLine = startLine;
   }
@@ -166,7 +160,7 @@ export async function fileBlame(
       `Revision OID: ${commit.oid}`,
     ];
 
-    if (!blame || blame.ranges.length === 0) {
+    if (!Array.isArray(blame) || blame.length === 0) {
       metadataLines.push('', 'No blame information available for the requested range.');
       return metadataLines.join('\n');
     }
@@ -175,19 +169,19 @@ export async function fileBlame(
 
     let hasLines = false;
 
-    for (const range of blame.ranges) {
-      if (!isValidRange(range)) {
+    for (const hunk of blame) {
+      if (!isValidHunk(hunk)) {
         continue;
       }
 
-      const commitInfo = range.commit;
+      const commitInfo = hunk.commit;
       const commitLabel = commitInfo?.abbreviatedOID ?? commitInfo?.oid ?? 'unknown';
       const subject = formatSubject(commitInfo?.subject);
       const url = formatUrl(commitInfo?.url);
-      const author = formatAuthor(range);
-      const timestamp = formatDate(range.author?.date);
+      const author = formatAuthor(hunk);
+      const timestamp = formatDate(hunk.author?.date);
 
-      for (let lineNumber = range.startLine; lineNumber <= range.endLine; lineNumber += 1) {
+      for (let lineNumber = hunk.startLine; lineNumber <= hunk.endLine; lineNumber += 1) {
         metadataLines.push(
           `${String(lineNumber)} | ${commitLabel} | ${author} | ${timestamp} | ${subject} | ${url}`
         );
