@@ -29,15 +29,16 @@ interface ComparisonHunk {
   body: string;
 }
 
+interface ComparisonFileDiffStat {
+  added?: number | null;
+  changed?: number | null;
+  deleted?: number | null;
+}
+
 interface ComparisonFileDiff {
   oldPath?: string | null;
   newPath?: string | null;
-  isBinary?: boolean | null;
-  stat?: {
-    added?: number | null;
-    changed?: number | null;
-    deleted?: number | null;
-  } | null;
+  stat?: ComparisonFileDiffStat | null;
   hunks: ComparisonHunk[];
 }
 
@@ -45,9 +46,6 @@ interface RepoComparisonResponse {
   repository: {
     name: string;
     comparison: {
-      range?: {
-        expression?: string | null;
-      } | null;
       commits: {
         nodes: ComparisonCommit[];
         totalCount: number;
@@ -122,17 +120,24 @@ function summariseHunk(hunk: ComparisonHunk, index: number): string[] {
 function summariseFileDiff(diff: ComparisonFileDiff, index: number): string[] {
   const descriptor = describeDiff(diff);
   const lines = [`  ${(index + 1).toString()}. ${descriptor}`];
-  const stat = diff.stat ?? {};
-  const added = stat.added ?? 0;
-  const changed = stat.changed ?? 0;
-  const deleted = stat.deleted ?? 0;
-  lines.push(`     Stats: +${added.toString()} ~${changed.toString()} -${deleted.toString()}`);
-  if (diff.isBinary) {
-    lines.push('     Binary file diff omitted.');
-    return lines;
+  const stat: ComparisonFileDiffStat = diff.stat ?? {};
+  const statParts: string[] = [];
+  if (typeof stat.added === 'number') {
+    statParts.push(`+${stat.added.toString()}`);
+  }
+  if (typeof stat.changed === 'number') {
+    statParts.push(`~${stat.changed.toString()}`);
+  }
+  if (typeof stat.deleted === 'number') {
+    statParts.push(`-${stat.deleted.toString()}`);
+  }
+  if (statParts.length > 0) {
+    lines.push(`     Stats: ${statParts.join(' ')}`);
+  } else {
+    lines.push('     Stats: unavailable.');
   }
   if (!diff.hunks.length) {
-    lines.push('     No diff hunks available.');
+    lines.push('     No diff hunks available (file may be binary or diff omitted).');
     return lines;
   }
   diff.hunks.forEach((hunk, hunkIndex) => {
@@ -221,11 +226,6 @@ export async function repoCompareCommits(
     lines.push(`Repository: ${response.repository.name}`);
     lines.push(`Base Revision: ${base}`);
     lines.push(`Head Revision: ${head}`);
-
-    const expression = comparison.range?.expression?.trim();
-    if (expression) {
-      lines.push(`Range: ${expression}`);
-    }
 
     lines.push('');
 
