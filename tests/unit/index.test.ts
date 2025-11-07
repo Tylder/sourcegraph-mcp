@@ -129,7 +129,7 @@ vi.mock('../../src/tools/files/get.js', () => ({
   fileGet: fileGetMock,
 }));
 
-vi.mock('../../src/tools/files/blame.js', () => ({
+vi.mock('../../src/tools/files/file_blame.js', () => ({
   fileBlame: fileBlameMock,
 }));
 

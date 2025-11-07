@@ -65,6 +65,12 @@ function buildMetadata({
   ];
 }
 
+/**
+ * Retrieve the contents of a specific file from a repository at a given revision
+ * @param client - The Sourcegraph GraphQL client
+ * @param params - File retrieval parameters (repo, path, optional revision)
+ * @returns Formatted string with file metadata and content, or error message
+ */
 export async function fileGet(client: SourcegraphClient, params: FileGetParams): Promise<string> {
   const { repo, path, rev } = params;
   const revisionLabel = rev ?? 'HEAD';

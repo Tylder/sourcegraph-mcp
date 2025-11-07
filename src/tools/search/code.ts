@@ -38,6 +38,12 @@ export interface SearchCodeParams {
   limit?: number;
 }
 
+/**
+ * Search for code across repositories using Sourcegraph's advanced search syntax
+ * @param client - The Sourcegraph GraphQL client
+ * @param params - Search parameters including query and optional limit
+ * @returns Formatted string containing search results with file paths, URLs, and code matches
+ */
 export async function searchCode(
   client: SourcegraphClient,
   params: SearchCodeParams,
