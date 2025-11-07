@@ -10,6 +10,7 @@ const searchCommitsMock = vi.fn().mockResolvedValue('commits result');
 const repoListMock = vi.fn().mockResolvedValue('list result');
 const repoInfoMock = vi.fn().mockResolvedValue('info result');
 const repoBranchesMock = vi.fn().mockResolvedValue('branches result');
+const repoCompareCommitsMock = vi.fn().mockResolvedValue('comparison result');
 const fileTreeMock = vi.fn().mockResolvedValue('tree result');
 const fileGetMock = vi.fn().mockResolvedValue('file get result');
 const fileBlameMock = vi.fn().mockResolvedValue('blame result');
@@ -86,6 +87,10 @@ vi.mock('../../src/tools/repos/branches.js', () => ({
   repoBranches: repoBranchesMock,
 }));
 
+vi.mock('../../src/tools/repos/repo_compare_commits.js', () => ({
+  repoCompareCommits: repoCompareCommitsMock,
+}));
+
 vi.mock('../../src/tools/files/tree.js', () => ({
   fileTree: fileTreeMock,
 }));
@@ -110,6 +115,7 @@ describe('index entrypoint', () => {
     repoListMock.mockClear();
     repoInfoMock.mockClear();
     repoBranchesMock.mockClear();
+    repoCompareCommitsMock.mockClear();
     fileTreeMock.mockClear();
     fileGetMock.mockClear();
     fileBlameMock.mockClear();
@@ -136,6 +142,7 @@ describe('index entrypoint', () => {
       'repo_list',
       'repo_info',
       'repo_branches',
+      'repo_compare_commits',
       'file_tree',
       'file_get',
       'file_blame',
@@ -179,6 +186,13 @@ describe('index entrypoint', () => {
       repo: 'name',
       query: 'branch',
       limit: 6,
+    });
+
+    await toolHandlers.get('repo_compare_commits')?.({ repo: 'name', baseRev: 'base', headRev: 'head' });
+    expect(repoCompareCommitsMock).toHaveBeenCalledWith(expect.anything(), {
+      repo: 'name',
+      baseRev: 'base',
+      headRev: 'head',
     });
 
     await toolHandlers.get('file_tree')?.({ repo: 'r', path: 'p', rev: 'v' });

@@ -83,3 +83,63 @@ export const REPO_BRANCHES_QUERY = `
     }
   }
 `;
+
+export const REPO_COMPARISON_QUERY = `
+  query RepoComparison(
+    $name: String!
+    $base: String!
+    $head: String!
+    $firstCommits: Int!
+    $firstDiffs: Int!
+  ) {
+    repository(name: $name) {
+      name
+      comparison(base: $base, head: $head) {
+        range {
+          expression
+        }
+        commits(first: $firstCommits) {
+          nodes {
+            oid
+            abbreviatedOID
+            subject
+            author {
+              person {
+                displayName
+                name
+                email
+              }
+              date
+            }
+            url
+          }
+          totalCount
+        }
+        fileDiffs(first: $firstDiffs) {
+          nodes {
+            oldPath
+            newPath
+            isBinary
+            stat {
+              added
+              changed
+              deleted
+            }
+            hunks {
+              oldRange {
+                startLine
+                lines
+              }
+              newRange {
+                startLine
+                lines
+              }
+              body
+            }
+          }
+          totalCount
+        }
+      }
+    }
+  }
+`;

@@ -16,6 +16,7 @@ import { searchCommits } from './tools/search/commits.js';
 import { repoList } from './tools/repos/list.js';
 import { repoInfo } from './tools/repos/info.js';
 import { repoBranches } from './tools/repos/branches.js';
+import { repoCompareCommits } from './tools/repos/repo_compare_commits.js';
 import { fileTree } from './tools/files/tree.js';
 import { fileGet } from './tools/files/get.js';
 import { fileBlame } from './tools/files/blame.js';
@@ -256,6 +257,40 @@ server.tool(
       limit?: number;
     };
     const result = await repoBranches(sgClient, { repo, query, limit });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: result,
+        },
+      ],
+    };
+  }
+);
+
+const repoCompareCommitsSchema: Record<string, ZodTypeAny> = {
+  repo: z
+    .string()
+    .min(1)
+    .describe('Full repository name (e.g., "github.com/sourcegraph/sourcegraph")'),
+  baseRev: z.string().min(1).describe('Base revision to compare (commit ID, branch, or tag)'),
+  headRev: z.string().min(1).describe('Head revision to compare (commit ID, branch, or tag)'),
+};
+
+server.tool(
+  'repo_compare_commits',
+  'Compare two revisions in a repository and return commit metadata with diff previews',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  repoCompareCommitsSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
+    const { repo, baseRev, headRev } = args as {
+      repo: string;
+      baseRev: string;
+      headRev: string;
+    };
+    const result = await repoCompareCommits(sgClient, { repo, baseRev, headRev });
 
     return {
       content: [
