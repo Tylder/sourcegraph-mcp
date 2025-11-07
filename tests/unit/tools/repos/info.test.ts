@@ -67,7 +67,6 @@ describe('repoInfo', () => {
             cloneProgress: '50%',
           },
           defaultBranch: null,
-          viewerCanAdminister: false,
           updatedAt: null,
         },
       }),
@@ -101,8 +100,7 @@ describe('repoInfo', () => {
           defaultBranch: {
             displayName: 'main',
           },
-          diskUsage: 1048576,
-          viewerPermission: 'READ',
+          viewerCanAdminister: false,
           updatedAt: '2024-01-01T00:00:00Z',
         },
       }),
@@ -127,8 +125,7 @@ describe('repoInfo', () => {
           defaultBranch: {
             displayName: 'main',
           },
-          diskUsage: 1048576,
-          viewerPermission: 'READ',
+          viewerCanAdminister: false,
           updatedAt: '2024-01-01T00:00:00Z',
         },
       }),
@@ -157,8 +154,7 @@ describe('repoInfo', () => {
           defaultBranch: {
             displayName: 'main',
           },
-          diskUsage: 1048576,
-          viewerPermission: 'READ',
+          viewerCanAdminister: false,
           updatedAt: '2024-01-01T00:00:00Z',
         },
       }),
