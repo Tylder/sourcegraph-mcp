@@ -189,7 +189,7 @@ npm run build
 
 We enforce formatting and linting on staged TypeScript files via [lint-staged](https://github.com/okonet/lint-staged).
 
-- Husky runs `npx lint-staged` as part of the pre-commit hook.
+- Husky runs `npm run lint-staged` as part of the pre-commit hook.
 - All staged `*.ts`/`*.tsx` files are automatically processed with ESLint (with `--fix`) and Prettier.
 - If a file is modified by the hook, re-stage the file (`git add <file>`) before retrying the commit.
 
