@@ -13,7 +13,7 @@ describe('repoInfo', () => {
           isPrivate: false,
           isFork: true,
           isArchived: false,
-          viewerPermission: 'ADMIN',
+          viewerCanAdminister: true,
           mirrorInfo: {
             cloned: true,
             cloneInProgress: false,
@@ -22,7 +22,6 @@ describe('repoInfo', () => {
           defaultBranch: {
             displayName: 'main',
           },
-          diskUsage: 10485760,
           updatedAt: '2024-01-01T00:00:00Z',
         },
       }),
@@ -36,8 +35,7 @@ describe('repoInfo', () => {
     expect(result).toContain('Visibility: Public');
     expect(result).toContain('Fork: Yes');
     expect(result).toContain('Clone Status: Cloned');
-    expect(result).toContain('Disk Usage: 10.00 MB');
-    expect(result).toContain('Viewer Permission: ADMIN');
+    expect(result).toContain('Can Administer: Yes');
     expect(result).toContain('Last Updated: 2024-01-01T00:00:00Z');
   });
 
@@ -69,8 +67,7 @@ describe('repoInfo', () => {
             cloneProgress: '50%',
           },
           defaultBranch: null,
-          diskUsage: null,
-          viewerPermission: null,
+          viewerCanAdminister: false,
           updatedAt: null,
         },
       }),

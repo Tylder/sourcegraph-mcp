@@ -7,9 +7,8 @@ export const REPOSITORY_LIST_QUERY = `
     $query: String
     $first: Int!
     $after: String
-    $orderBy: RepositoryOrder
   ) {
-    repositories(query: $query, first: $first, after: $after, orderBy: $orderBy) {
+    repositories(query: $query, first: $first, after: $after) {
       nodes {
         name
         url
@@ -44,7 +43,7 @@ export const REPO_INFO_QUERY = `
       isPrivate
       isFork
       isArchived
-      viewerPermission
+      viewerCanAdminister
       mirrorInfo {
         cloned
         cloneInProgress
@@ -53,7 +52,6 @@ export const REPO_INFO_QUERY = `
       defaultBranch {
         displayName
       }
-      diskUsage
       updatedAt
     }
   }

@@ -64,7 +64,6 @@ describe('repoList', () => {
       query: 'test',
       first: 20,
       after: 'cursor123',
-      orderBy: { field: 'UPDATED_AT', direction: 'DESC' },
     });
 
     expect(mockClient.query).toHaveBeenCalledWith(
@@ -73,7 +72,6 @@ describe('repoList', () => {
         query: 'test',
         first: 20,
         after: 'cursor123',
-        orderBy: { field: 'UPDATED_AT', direction: 'DESC' },
       })
     );
   });

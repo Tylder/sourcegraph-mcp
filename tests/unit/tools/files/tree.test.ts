@@ -27,7 +27,6 @@ describe('fileTree', () => {
                   url: '/blob/README.md',
                   isDirectory: false,
                   isSingleChild: false,
-                  byteSize: 1200,
                 },
               ],
             },
@@ -47,7 +46,6 @@ describe('fileTree', () => {
     expect(result).toContain('Path: src');
     expect(result).toContain('[Directory] src');
     expect(result).toContain('[File] README.md');
-    expect(result).toContain('Size: 1200 bytes');
   });
 
   it('should default to HEAD revision and root path', async () => {

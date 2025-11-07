@@ -9,7 +9,7 @@ interface RepoInfoResponse {
     isPrivate: boolean;
     isFork: boolean;
     isArchived: boolean;
-    viewerPermission?: string | null;
+    viewerCanAdminister?: boolean;
     mirrorInfo?: {
       cloned: boolean;
       cloneInProgress: boolean;
@@ -48,15 +48,6 @@ function formatCloneStatus(response: RepoInfoResponse['repository']): string {
   }
 
   return 'Not cloned';
-}
-
-function formatDiskUsage(diskUsage?: number | null): string | null {
-  if (diskUsage === null || diskUsage === undefined) {
-    return null;
-  }
-
-  const megabytes = diskUsage / (1024 * 1024);
-  return `${megabytes.toFixed(2)} MB`;
 }
 
 /**
@@ -99,14 +90,9 @@ export async function repoInfo(client: SourcegraphClient, params: RepoInfoParams
     output += `Clone Status: ${formatCloneStatus(repository)}\n`;
 
     const stats: string[] = [];
-    const diskUsage = formatDiskUsage(repository.diskUsage);
 
-    if (diskUsage) {
-      stats.push(`Disk Usage: ${diskUsage}`);
-    }
-
-    if (repository.viewerPermission) {
-      stats.push(`Viewer Permission: ${repository.viewerPermission}`);
+    if (repository.viewerCanAdminister !== undefined) {
+      stats.push(`Can Administer: ${repository.viewerCanAdminister ? 'Yes' : 'No'}`);
     }
 
     if (repository.updatedAt) {

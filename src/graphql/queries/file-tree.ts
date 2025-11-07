@@ -3,7 +3,7 @@
  */
 
 export const FILE_TREE_QUERY = `
-  query FileTree($repo: String!, $path: String!, $rev: String) {
+  query FileTree($repo: String!, $path: String!, $rev: String!) {
     repository(name: $repo) {
       name
       url
@@ -17,7 +17,6 @@ export const FILE_TREE_QUERY = `
             url
             isDirectory
             isSingleChild
-            byteSize
             submodule {
               url
             }

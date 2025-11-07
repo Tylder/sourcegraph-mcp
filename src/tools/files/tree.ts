@@ -108,10 +108,6 @@ export async function fileTree(client: SourcegraphClient, params: FileTreeParams
       output += `${entryNumber}. [${typeLabel}] ${entry.name} (${entry.path})\n`;
       output += `   URL: ${entry.url}\n`;
 
-      if (!entry.isDirectory && typeof entry.byteSize === 'number') {
-        output += `   Size: ${entry.byteSize.toString()} bytes\n`;
-      }
-
       if (entry.isSingleChild) {
         output += '   Note: Single child directory\n';
       }

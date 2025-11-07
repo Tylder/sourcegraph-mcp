@@ -45,16 +45,12 @@ export interface RepoListParams {
   query?: string;
   first?: number;
   after?: string;
-  orderBy?: {
-    field: RepositoryOrderField;
-    direction?: OrderDirection;
-  };
 }
 
 type RepositoryNode = RepositoryListResponse['repositories']['nodes'][number];
 
 function buildQueryVariables(params: RepoListParams): Record<string, unknown> {
-  const { query, first = 10, after, orderBy } = params;
+  const { query, first = 10, after } = params;
 
   const variables: Record<string, unknown> = { first };
 
@@ -64,10 +60,6 @@ function buildQueryVariables(params: RepoListParams): Record<string, unknown> {
 
   if (after) {
     variables.after = after;
-  }
-
-  if (orderBy) {
-    variables.orderBy = orderBy;
   }
 
   return variables;
