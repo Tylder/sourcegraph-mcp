@@ -7,29 +7,31 @@ import { REPOSITORY_LIST_QUERY } from '../../graphql/queries/repos.js';
 
 interface RepositoryListResponse {
   repositories: {
-    nodes: {
-      name: string;
-      url: string;
-      description?: string | null;
-      isPrivate: boolean;
-      isFork: boolean;
-      isArchived: boolean;
-      mirrorInfo?: {
-        cloned: boolean;
-        cloneInProgress: boolean;
-      } | null;
-      defaultBranch?: {
-        displayName: string;
-      } | null;
-      viewerCanAdminister: boolean;
-      updatedAt: string;
-    }[];
+    nodes: RepositoryNode[];
     totalCount: number;
     pageInfo: {
       hasNextPage: boolean;
       endCursor?: string | null;
     };
   };
+}
+
+interface RepositoryNode {
+  name: string;
+  url: string;
+  description?: string | null;
+  isPrivate: boolean;
+  isFork: boolean;
+  isArchived: boolean;
+  viewerCanAdminister: boolean;
+  mirrorInfo?: {
+    cloned: boolean;
+    cloneInProgress: boolean;
+  } | null;
+  defaultBranch?: {
+    displayName?: string | null;
+  } | null;
+  updatedAt: string;
 }
 
 export type RepositoryOrderField =
@@ -41,25 +43,51 @@ export type RepositoryOrderField =
 
 export type OrderDirection = 'ASC' | 'DESC';
 
+export interface RepoListOrderBy {
+  field?: RepositoryOrderField;
+  direction?: OrderDirection;
+}
+
 export interface RepoListParams {
   query?: string;
   first?: number;
   after?: string;
+  orderBy?: RepoListOrderBy;
 }
 
-type RepositoryNode = RepositoryListResponse['repositories']['nodes'][number];
+interface RepositoryListVariables {
+  first: number;
+  query?: string;
+  after?: string;
+  orderBy: {
+    field: RepositoryOrderField;
+    direction: OrderDirection;
+  };
+}
 
-function buildQueryVariables(params: RepoListParams): Record<string, unknown> {
-  const { query, first = 10, after } = params;
+type RepositoryListQueryVariables = RepositoryListVariables & Record<string, unknown>;
 
-  const variables: Record<string, unknown> = { first };
+const DEFAULT_FIRST = 20;
+const DEFAULT_ORDER_FIELD: RepositoryOrderField = 'REPOSITORY_NAME';
+const DEFAULT_ORDER_DIRECTION: OrderDirection = 'ASC';
 
-  if (query) {
-    variables.query = query;
+function buildQueryVariables(params: RepoListParams): RepositoryListQueryVariables {
+  const trimmedQuery = params.query?.trim();
+
+  const variables: RepositoryListQueryVariables = {
+    first: params.first ?? DEFAULT_FIRST,
+    orderBy: {
+      field: params.orderBy?.field ?? DEFAULT_ORDER_FIELD,
+      direction: params.orderBy?.direction ?? DEFAULT_ORDER_DIRECTION,
+    },
+  };
+
+  if (trimmedQuery) {
+    variables.query = trimmedQuery;
   }
 
-  if (after) {
-    variables.after = after;
+  if (params.after) {
+    variables.after = params.after;
   }
 
   return variables;
@@ -116,23 +144,27 @@ function formatRepositoryDetails(repository: RepositoryNode, index: number): str
 
 export async function repoList(client: SourcegraphClient, params: RepoListParams): Promise<string> {
   const variables = buildQueryVariables(params);
-  const requested = typeof params.first === 'number' ? params.first : 10;
+  const requested = params.first ?? DEFAULT_FIRST;
 
   try {
     const response = await client.query<RepositoryListResponse>(REPOSITORY_LIST_QUERY, variables);
-    const repositories = response.repositories;
+    const { repositories } = response;
 
     const summaryLines: string[] = [
       'Repository List',
       `Total Count: ${repositories.totalCount.toString()}`,
       `Requested: ${requested.toString()}`,
+      `Has Next Page: ${repositories.pageInfo.hasNextPage ? 'yes' : 'no'}`,
+      `Order: ${variables.orderBy.field} (${variables.orderBy.direction})`,
     ];
 
-    if (params.query) {
-      summaryLines.push(`Query: ${params.query}`);
+    if (variables.query) {
+      summaryLines.splice(3, 0, `Query: ${variables.query}`);
     }
 
-    summaryLines.push(`Has Next Page: ${repositories.pageInfo.hasNextPage ? 'yes' : 'no'}`);
+    if (variables.after) {
+      summaryLines.push(`Starting Cursor: ${variables.after}`);
+    }
 
     if (repositories.pageInfo.hasNextPage && repositories.pageInfo.endCursor) {
       summaryLines.push(`Next Page Cursor: ${repositories.pageInfo.endCursor}`);

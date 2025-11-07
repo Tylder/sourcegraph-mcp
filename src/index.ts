@@ -13,7 +13,8 @@ import { testConnection } from './tools/util/connection.js';
 import { searchCode } from './tools/search/code.js';
 import { searchSymbols } from './tools/search/symbols.js';
 import { searchCommits } from './tools/search/commits.js';
-import { repoList } from './tools/repos/list.js';
+import { repoList } from './tools/repos/repo_list.js';
+import type { RepoListParams } from './tools/repos/repo_list.js';
 import { repoInfo } from './tools/repos/info.js';
 import { repoBranches } from './tools/repos/branches.js';
 import { fileTree } from './tools/files/tree.js';
@@ -180,6 +181,20 @@ const repoListSchema: Record<string, ZodTypeAny> = {
     .max(100)
     .optional()
     .describe('Maximum number of repositories (default: 20)'),
+  after: z
+    .string()
+    .optional()
+    .describe('Pagination cursor returned from a previous repo_list call'),
+  orderBy: z
+    .object({
+      field: z
+        .enum(['REPOSITORY_NAME', 'STARS', 'UPDATED_AT', 'COMMIT_DATE', 'CREATED_AT'])
+        .optional()
+        .describe('Field to order by'),
+      direction: z.enum(['ASC', 'DESC']).optional().describe('Ordering direction'),
+    })
+    .optional()
+    .describe('Order configuration for repositories (defaults to REPOSITORY_NAME ascending)'),
 };
 
 server.tool(
@@ -189,8 +204,8 @@ server.tool(
   repoListSchema as any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (args: any) => {
-    const { query, first } = args as { query?: string; first?: number };
-    const result = await repoList(sgClient, { query, first });
+    const { query, first, after, orderBy } = args as RepoListParams;
+    const result = await repoList(sgClient, { query, first, after, orderBy });
 
     return {
       content: [

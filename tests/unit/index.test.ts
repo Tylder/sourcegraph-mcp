@@ -74,7 +74,7 @@ vi.mock('../../src/tools/search/commits.js', () => ({
   searchCommits: searchCommitsMock,
 }));
 
-vi.mock('../../src/tools/repos/list.js', () => ({
+vi.mock('../../src/tools/repos/repo_list.js', () => ({
   repoList: repoListMock,
 }));
 

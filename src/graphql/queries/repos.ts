@@ -7,8 +7,9 @@ export const REPOSITORY_LIST_QUERY = `
     $query: String
     $first: Int!
     $after: String
+    $orderBy: RepositoryOrderByInput!
   ) {
-    repositories(query: $query, first: $first, after: $after) {
+    repositories(query: $query, first: $first, after: $after, orderBy: $orderBy) {
       nodes {
         name
         url
