@@ -4,27 +4,25 @@ import type { SourcegraphClient } from '../../../../src/graphql/client.js';
 
 describe('fileGet', () => {
   it('should return file content with metadata', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: {
-          name: 'github.com/test/repo',
-          url: '/github.com/test/repo',
-          commit: {
-            oid: 'abcdef',
-            blob: {
-              path: 'src/index.ts',
-              content: 'console.log("hello");\n',
-              byteSize: 24,
-              isBinary: false,
-              highlight: {
-                aborted: false,
-                language: 'TypeScript',
-              },
+    const query = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'github.com/test/repo',
+        url: '/github.com/test/repo',
+        commit: {
+          oid: 'abcdef',
+          blob: {
+            path: 'src/index.ts',
+            content: 'console.log("hello");\n',
+            byteSize: 24,
+            isBinary: false,
+            highlight: {
+              aborted: false,
             },
           },
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -38,32 +36,29 @@ describe('fileGet', () => {
     expect(result).toContain('Revision Requested: main');
     expect(result).toContain('Revision OID: abcdef');
     expect(result).toContain('Size: 24 bytes');
-    expect(result).toContain('Language: TypeScript');
     expect(result).toContain('console.log("hello");');
   });
 
   it('should omit content for binary files', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: {
-          name: 'github.com/test/repo',
-          url: '/github.com/test/repo',
-          commit: {
-            oid: 'abcdef',
-            blob: {
-              path: 'bin/file',
-              content: null,
-              byteSize: 1024,
-              isBinary: true,
-              highlight: {
-                aborted: false,
-                language: null,
-              },
+    const query = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'github.com/test/repo',
+        url: '/github.com/test/repo',
+        commit: {
+          oid: 'abcdef',
+          blob: {
+            path: 'bin/file',
+            content: null,
+            byteSize: 1024,
+            isBinary: true,
+            highlight: {
+              aborted: false,
             },
           },
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -71,16 +66,22 @@ describe('fileGet', () => {
     });
 
     expect(result).toContain('Revision Requested: HEAD');
-    expect(result).toContain('Language: unknown');
     expect(result).toContain('Warning: Binary file content is not displayed.');
+    expect(query).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        repo: 'github.com/test/repo',
+        path: 'bin/file',
+        rev: 'HEAD',
+      })
+    );
   });
 
   it('should handle missing repository', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: null,
-      }),
-    } as unknown as SourcegraphClient;
+    const query = vi.fn().mockResolvedValue({
+      repository: null,
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -88,18 +89,25 @@ describe('fileGet', () => {
     });
 
     expect(result).toBe('Repository github.com/test/repo not found.');
+    expect(query).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        repo: 'github.com/test/repo',
+        path: 'src/index.ts',
+        rev: 'HEAD',
+      })
+    );
   });
 
   it('should handle missing commit', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: {
-          name: 'github.com/test/repo',
-          url: '/github.com/test/repo',
-          commit: null,
-        },
-      }),
-    } as unknown as SourcegraphClient;
+    const query = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'github.com/test/repo',
+        url: '/github.com/test/repo',
+        commit: null,
+      },
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -111,18 +119,17 @@ describe('fileGet', () => {
   });
 
   it('should handle missing blob', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: {
-          name: 'github.com/test/repo',
-          url: '/github.com/test/repo',
-          commit: {
-            oid: 'abcdef',
-            blob: null,
-          },
+    const query = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'github.com/test/repo',
+        url: '/github.com/test/repo',
+        commit: {
+          oid: 'abcdef',
+          blob: null,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -130,33 +137,29 @@ describe('fileGet', () => {
       rev: 'main',
     });
 
-    expect(result).toBe(
-      'File src/index.ts not found at main in github.com/test/repo.'
-    );
+    expect(result).toBe('File src/index.ts not found at main in github.com/test/repo.');
   });
 
   it('should handle missing content', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: {
-          name: 'github.com/test/repo',
-          url: '/github.com/test/repo',
-          commit: {
-            oid: 'abcdef',
-            blob: {
-              path: 'README.md',
-              content: null,
-              byteSize: 10,
-              isBinary: false,
-              highlight: {
-                aborted: false,
-                language: 'Markdown',
-              },
+    const query = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'github.com/test/repo',
+        url: '/github.com/test/repo',
+        commit: {
+          oid: 'abcdef',
+          blob: {
+            path: 'README.md',
+            content: null,
+            byteSize: 10,
+            isBinary: false,
+            highlight: {
+              aborted: false,
             },
           },
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -164,30 +167,36 @@ describe('fileGet', () => {
     });
 
     expect(result).toContain('No content available for this file.');
+    expect(query).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        repo: 'github.com/test/repo',
+        path: 'README.md',
+        rev: 'HEAD',
+      })
+    );
   });
 
   it('should fall back to requested path when blob path is missing', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: {
-          name: 'github.com/test/repo',
-          url: '/github.com/test/repo',
-          commit: {
-            oid: 'abcdef',
-            blob: {
-              path: null,
-              content: 'data',
-              byteSize: 4,
-              isBinary: false,
-              highlight: {
-                aborted: false,
-                language: 'Plain Text',
-              },
+    const query = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'github.com/test/repo',
+        url: '/github.com/test/repo',
+        commit: {
+          oid: 'abcdef',
+          blob: {
+            path: null,
+            content: 'data',
+            byteSize: 4,
+            isBinary: false,
+            highlight: {
+              aborted: false,
             },
           },
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -195,31 +204,28 @@ describe('fileGet', () => {
     });
 
     expect(result).toContain('Path: docs/README.md');
-    expect(result).toContain('Language: Plain Text');
   });
 
   it('should note highlighting aborts', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: {
-          name: 'github.com/test/repo',
-          url: '/github.com/test/repo',
-          commit: {
-            oid: 'abcdef',
-            blob: {
-              path: 'src/index.ts',
-              content: 'code',
-              byteSize: 4,
-              isBinary: false,
-              highlight: {
-                aborted: true,
-                language: 'TypeScript',
-              },
+    const query = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'github.com/test/repo',
+        url: '/github.com/test/repo',
+        commit: {
+          oid: 'abcdef',
+          blob: {
+            path: 'src/index.ts',
+            content: 'code',
+            byteSize: 4,
+            isBinary: false,
+            highlight: {
+              aborted: true,
             },
           },
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -227,12 +233,19 @@ describe('fileGet', () => {
     });
 
     expect(result).toContain('Syntax highlighting was aborted');
+    expect(query).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        repo: 'github.com/test/repo',
+        path: 'src/index.ts',
+        rev: 'HEAD',
+      })
+    );
   });
 
   it('should handle errors gracefully', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue(new Error('GraphQL error')),
-    } as unknown as SourcegraphClient;
+    const query = vi.fn().mockRejectedValue(new Error('GraphQL error'));
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -243,9 +256,8 @@ describe('fileGet', () => {
   });
 
   it('should handle non-Error rejections gracefully', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue('GraphQL error'),
-    } as unknown as SourcegraphClient;
+    const query = vi.fn().mockRejectedValue('GraphQL error');
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     const result = await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -256,11 +268,10 @@ describe('fileGet', () => {
   });
 
   it('should pass variables to the query', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: null,
-      }),
-    } as unknown as SourcegraphClient;
+    const query = vi.fn().mockResolvedValue({
+      repository: null,
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
 
     await fileGet(mockClient, {
       repo: 'github.com/test/repo',
@@ -268,7 +279,7 @@ describe('fileGet', () => {
       rev: 'main',
     });
 
-    expect(mockClient.query).toHaveBeenCalledWith(
+    expect(query).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         repo: 'github.com/test/repo',
