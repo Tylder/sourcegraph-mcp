@@ -77,3 +77,45 @@ export const COMMIT_SEARCH_QUERY = `
     }
   }
 `;
+
+export const SYMBOL_SEARCH_QUERY = `
+  query SymbolSearch($query: String!, $cursor: String) {
+    search(query: $query, version: V3, patternType: standard, cursor: $cursor) {
+      results {
+        results {
+          __typename
+          ... on SymbolSearchResult {
+            symbol {
+              name
+              kind
+              language
+              containerName
+              url
+              location {
+                resource {
+                  repository {
+                    name
+                    url
+                  }
+                  path
+                }
+                range {
+                  start {
+                    line
+                    character
+                  }
+                }
+              }
+            }
+          }
+        }
+        matchCount
+        limitHit
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;

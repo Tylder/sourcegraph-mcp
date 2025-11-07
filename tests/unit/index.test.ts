@@ -66,7 +66,7 @@ vi.mock('../../src/tools/search/code.js', () => ({
   searchCode: searchCodeMock,
 }));
 
-vi.mock('../../src/tools/search/symbols.js', () => ({
+vi.mock('../../src/tools/search/search_symbols.js', () => ({
   searchSymbols: searchSymbolsMock,
 }));
 
@@ -152,11 +152,12 @@ describe('index entrypoint', () => {
     await toolHandlers.get('search_code')?.({ query: 'q', limit: 2 });
     expect(searchCodeMock).toHaveBeenCalledWith(expect.anything(), { query: 'q', limit: 2 });
 
-    await toolHandlers.get('search_symbols')?.({ query: 'q', types: ['class'], limit: 3 });
+    await toolHandlers.get('search_symbols')?.({ query: 'q', types: ['class'], limit: 3, cursor: 'cur' });
     expect(searchSymbolsMock).toHaveBeenCalledWith(expect.anything(), {
       query: 'q',
       types: ['class'],
       limit: 3,
+      cursor: 'cur',
     });
 
     await toolHandlers.get('search_commits')?.({ query: 'q', author: 'a', after: 'b', before: 'c', limit: 4 });

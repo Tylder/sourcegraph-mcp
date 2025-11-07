@@ -11,7 +11,7 @@ import { getConfig, validateConfig } from './config.js';
 import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
 import { searchCode } from './tools/search/code.js';
-import { searchSymbols } from './tools/search/symbols.js';
+import { searchSymbols } from './tools/search/search_symbols.js';
 import { searchCommits } from './tools/search/commits.js';
 import { repoList } from './tools/repos/list.js';
 import { repoInfo } from './tools/repos/info.js';
@@ -96,6 +96,10 @@ const searchSymbolsSchema: Record<string, ZodTypeAny> = {
     .max(100)
     .optional()
     .describe('Maximum number of results (default: 10)'),
+  cursor: z
+    .string()
+    .optional()
+    .describe('Pagination cursor from a previous search (use endCursor from the last response)'),
 };
 
 server.tool(
@@ -105,12 +109,24 @@ server.tool(
   searchSymbolsSchema as any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (args: any) => {
-    const { query, types, limit } = args as {
+    const { query, types, limit, cursor } = args as {
       query: string;
       types?: string[];
       limit?: number;
+      cursor?: string;
     };
-    const result = await searchSymbols(sgClient, { query, types, limit });
+    const searchParams: {
+      query: string;
+      types?: string[];
+      limit?: number;
+      cursor?: string;
+    } = { query, types, limit };
+
+    if (typeof cursor === 'string' && cursor.trim().length > 0) {
+      searchParams.cursor = cursor;
+    }
+
+    const result = await searchSymbols(sgClient, searchParams);
 
     return {
       content: [
