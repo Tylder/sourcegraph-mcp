@@ -16,6 +16,7 @@ import { searchCommits } from './tools/search/commits.js';
 import { repoList } from './tools/repos/list.js';
 import { repoInfo } from './tools/repos/info.js';
 import { repoBranches } from './tools/repos/branches.js';
+import { repoLanguages } from './tools/repos/repo_languages.js';
 import { fileTree } from './tools/files/tree.js';
 import { fileGet } from './tools/files/get.js';
 import { fileBlame } from './tools/files/blame.js';
@@ -256,6 +257,35 @@ server.tool(
       limit?: number;
     };
     const result = await repoBranches(sgClient, { repo, query, limit });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: result,
+        },
+      ],
+    };
+  }
+);
+
+const repoLanguagesSchema: Record<string, ZodTypeAny> = {
+  repo: z.string().describe('Full repository name (e.g., "github.com/sourcegraph/sourcegraph")'),
+  rev: z
+    .string()
+    .optional()
+    .describe('Repository revision/branch (default: HEAD) used for labelling results'),
+};
+
+server.tool(
+  'repo_languages',
+  'Retrieve programming language usage statistics for a repository',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  repoLanguagesSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
+    const { repo, rev } = args as { repo: string; rev?: string };
+    const result = await repoLanguages(sgClient, { repo, rev });
 
     return {
       content: [

@@ -83,3 +83,19 @@ export const REPO_BRANCHES_QUERY = `
     }
   }
 `;
+
+export const REPO_LANGUAGES_QUERY = `
+  query RepoLanguages($name: String!) {
+    repository(name: $name) {
+      name
+      languageStatistics {
+        name
+        displayName
+        color
+        totalBytes
+        totalLines
+        percentage
+      }
+    }
+  }
+`;
