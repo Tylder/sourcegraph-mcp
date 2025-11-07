@@ -32,10 +32,7 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "allowUnusedLabels": false,
-    "allowUnreachableCode": false,
-    
-    /* Completeness */
-    "skipLibCheck": true
+    "allowUnreachableCode": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests"]
