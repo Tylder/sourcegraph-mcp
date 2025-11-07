@@ -54,11 +54,11 @@ function buildQueryVariables(params: RepoListParams): Record<string, unknown> {
 
   const variables: Record<string, unknown> = { first };
 
-  if (query) {
+  if (typeof query === 'string' && query.length > 0) {
     variables.query = query;
   }
 
-  if (after) {
+  if (typeof after === 'string' && after.length > 0) {
     variables.after = after;
   }
 
@@ -103,11 +103,16 @@ function formatRepositoryDetails(repository: RepositoryNode, index: number): str
     `Repository ${(index + 1).toString()}:`,
     `Name: ${repository.name}`,
     `URL: ${repository.url}`,
-    repository.description ? `Description: ${repository.description}` : undefined,
-    formatRepositoryStatus(repository),
-    repository.defaultBranch?.displayName
-      ? `Default Branch: ${repository.defaultBranch.displayName}`
+    typeof repository.description === 'string' && repository.description.length > 0
+      ? `Description: ${repository.description}`
       : undefined,
+    formatRepositoryStatus(repository),
+    (() => {
+      const displayName = repository.defaultBranch?.displayName;
+      return typeof displayName === 'string' && displayName.length > 0
+        ? `Default Branch: ${displayName}`
+        : undefined;
+    })(),
     `Updated At: ${repository.updatedAt}`,
   ];
 
@@ -128,13 +133,17 @@ export async function repoList(client: SourcegraphClient, params: RepoListParams
       `Requested: ${requested.toString()}`,
     ];
 
-    if (params.query) {
+    if (typeof params.query === 'string' && params.query.length > 0) {
       summaryLines.push(`Query: ${params.query}`);
     }
 
     summaryLines.push(`Has Next Page: ${repositories.pageInfo.hasNextPage ? 'yes' : 'no'}`);
 
-    if (repositories.pageInfo.hasNextPage && repositories.pageInfo.endCursor) {
+    if (
+      repositories.pageInfo.hasNextPage &&
+      typeof repositories.pageInfo.endCursor === 'string' &&
+      repositories.pageInfo.endCursor.length > 0
+    ) {
       summaryLines.push(`Next Page Cursor: ${repositories.pageInfo.endCursor}`);
     }
 

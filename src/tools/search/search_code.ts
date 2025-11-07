@@ -71,7 +71,7 @@ const buildSearchQuery = (query: string, limit: number, timeout: number | undefi
   }
 
   const timeoutFilter = formatTimeoutFilter(timeout, query);
-  if (timeoutFilter) {
+  if (typeof timeoutFilter === 'string' && timeoutFilter.length > 0) {
     segments.push(timeoutFilter);
   }
 
@@ -81,7 +81,7 @@ const buildSearchQuery = (query: string, limit: number, timeout: number | undefi
 const ensureQuery = (rawQuery: string): string => {
   const trimmed = rawQuery.trim();
 
-  if (!trimmed) {
+  if (trimmed.length === 0) {
     throw new Error('Search query must not be empty.');
   }
 
@@ -91,7 +91,7 @@ const ensureQuery = (rawQuery: string): string => {
 const mapLineMatches = (
   matches: readonly GraphQLLineMatch[] | null | undefined,
 ): SearchCodeLineMatch[] => {
-  if (!matches || matches.length === 0) {
+  if (matches == null || matches.length === 0) {
     return [];
   }
 
@@ -106,7 +106,7 @@ const mapFileMatch = (result: GraphQLFileMatch): SearchCodeFileMatch | null => {
   const { repository } = result;
   const { file } = result;
 
-  if (!repository || !file) {
+  if (repository == null || file == null) {
     return null;
   }
 
@@ -122,7 +122,7 @@ const mapFileMatch = (result: GraphQLFileMatch): SearchCodeFileMatch | null => {
 const mapCommitMatch = (result: GraphQLCommitMatch): SearchCodeCommitMatch | null => {
   const { commit } = result;
 
-  if (!commit) {
+  if (commit == null) {
     return null;
   }
 
@@ -164,7 +164,7 @@ export async function searchCode(
     for (const result of results.results) {
       if (isFileMatchResult(result)) {
         const mapped = mapFileMatch(result);
-        if (mapped) {
+        if (mapped !== null) {
           fileMatches.push(mapped);
         }
         continue;
@@ -181,7 +181,7 @@ export async function searchCode(
 
       if (isCommitMatchResult(result)) {
         const mapped = mapCommitMatch(result);
-        if (mapped) {
+        if (mapped !== null) {
           commitMatches.push(mapped);
         }
       }

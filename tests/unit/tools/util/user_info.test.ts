@@ -4,21 +4,20 @@ import type { SourcegraphClient } from '../../../../src/graphql/client.js';
 
 describe('getUserInfo', () => {
   it('returns user details when current user is available', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        currentUser: {
-          username: 'alice',
-          email: 'alice@example.com',
-          displayName: 'Alice',
-          organizations: {
-            nodes: [
-              { name: 'org-1', displayName: 'Org One' },
-              { name: 'org-2', displayName: null },
-            ],
-          },
+    const queryMock = vi.fn().mockResolvedValue({
+      currentUser: {
+        username: 'alice',
+        email: 'alice@example.com',
+        displayName: 'Alice',
+        organizations: {
+          nodes: [
+            { name: 'org-1', displayName: 'Org One' },
+            { name: 'org-2', displayName: null },
+          ],
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await getUserInfo(mockClient);
 
@@ -31,15 +30,14 @@ describe('getUserInfo', () => {
         { name: 'org-2', displayName: null },
       ],
     });
-    expect(mockClient.query).toHaveBeenCalledTimes(1);
+    expect(queryMock).toHaveBeenCalledTimes(1);
   });
 
   it('throws a helpful error when no user is returned', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        currentUser: null,
-      }),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockResolvedValue({
+      currentUser: null,
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await expect(getUserInfo(mockClient)).rejects.toThrow(
       'Failed to fetch user info: No authenticated user found. Please check your access token.',
@@ -47,9 +45,8 @@ describe('getUserInfo', () => {
   });
 
   it('wraps GraphQL errors with additional context', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue(new Error('GraphQL request failed')),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockRejectedValue(new Error('GraphQL request failed'));
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await expect(getUserInfo(mockClient)).rejects.toThrow(
       'Failed to fetch user info: GraphQL request failed',
@@ -57,17 +54,16 @@ describe('getUserInfo', () => {
   });
 
   it('normalizes missing display names to null', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        currentUser: {
-          username: 'bob',
-          email: 'bob@example.com',
-          organizations: {
-            nodes: [{ name: 'org-1' }],
-          },
+    const queryMock = vi.fn().mockResolvedValue({
+      currentUser: {
+        username: 'bob',
+        email: 'bob@example.com',
+        organizations: {
+          nodes: [{ name: 'org-1' }],
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await getUserInfo(mockClient);
 
@@ -80,9 +76,8 @@ describe('getUserInfo', () => {
   });
 
   it('handles unexpected non-error exceptions gracefully', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue('boom'),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockRejectedValue('boom');
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await expect(getUserInfo(mockClient)).rejects.toThrow('Failed to fetch user info: boom');
   });

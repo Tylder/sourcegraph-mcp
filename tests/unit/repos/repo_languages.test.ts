@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { repoLanguages, __internal, type RepoLanguageBreakdown, type RepoLanguagesResult } from '../../../src/tools/repos/repo_languages.js';
+import {
+  repoLanguages,
+  __internal,
+  type RepoLanguageBreakdown,
+  type RepoLanguagesResult,
+} from '../../../src/tools/repos/repo_languages.js';
 import type { SourcegraphClient } from '../../../src/graphql/client.js';
 
 describe('repoLanguages', () => {

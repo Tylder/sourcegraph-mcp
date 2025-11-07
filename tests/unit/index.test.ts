@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-const toolHandlers = new Map<string, (args?: unknown) => Promise<unknown>>();
+type ToolHandler = (args?: unknown) => Promise<unknown>;
+
+const toolHandlers = new Map<string, ToolHandler>();
 const toolSchemas = new Map<string, unknown>();
 const registeredDescriptions = new Map<string, string>();
 const connectMock = vi.fn();
@@ -156,14 +158,16 @@ describe('index entrypoint', () => {
   });
 
   it('registers all tools and executes handlers', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation((): void => undefined);
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((): boolean => true);
 
     await import('../../src/index.js');
 
     expect(validateConfigMock).toHaveBeenCalledWith(configMock);
     expect(createdClients).toEqual([configMock]);
     expect(connectMock).toHaveBeenCalledWith(expect.any(Object));
-    expect(consoleSpy).toHaveBeenCalledWith('Sourcegraph MCP Server running on stdio');
+    expect(stderrSpy).toHaveBeenCalledWith('Sourcegraph MCP Server running on stdio\n');
+
+    stderrSpy.mockRestore();
 
     const toolNames = [
       'connection_test',
@@ -263,14 +267,12 @@ describe('index entrypoint', () => {
       path: 'p',
       rev: 'v',
     });
-
-    consoleSpy.mockRestore();
   });
 
   it('returns friendly error messages when user info lookup fails', async () => {
     userInfoMock.mockRejectedValueOnce('network unavailable');
     userInfoMock.mockRejectedValueOnce(new Error('still broken'));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation((): void => undefined);
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((): boolean => true);
 
     const module = await import('../../src/index.js');
     expect(module).toBeDefined();
@@ -296,6 +298,6 @@ describe('index entrypoint', () => {
       ],
     });
 
-    consoleSpy.mockRestore();
+    stderrSpy.mockRestore();
   });
 });

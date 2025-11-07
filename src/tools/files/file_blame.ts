@@ -63,13 +63,18 @@ const HEADER_SEPARATOR = '-'.repeat(TABLE_HEADER.length);
 function formatAuthor(hunk: BlameHunk): string {
   const displayName = hunk.author?.person?.displayName?.trim();
   const email = hunk.author?.person?.email?.trim();
-  const name = displayName ?? email ?? 'Unknown author';
-  const emailSuffix = email ? ` <${email}>` : '';
+  const name =
+    (typeof displayName === 'string' && displayName.length > 0
+      ? displayName
+      : typeof email === 'string' && email.length > 0
+        ? email
+        : undefined) ?? 'Unknown author';
+  const emailSuffix = typeof email === 'string' && email.length > 0 ? ` <${email}>` : '';
   return `${name}${emailSuffix}`;
 }
 
 function formatDate(value: string | null | undefined): string {
-  if (!value) {
+  if (typeof value !== 'string' || value.length === 0) {
     return 'Unknown date';
   }
   const date = new Date(value);
@@ -77,7 +82,7 @@ function formatDate(value: string | null | undefined): string {
 }
 
 function formatSubject(subject: string | null | undefined): string {
-  if (!subject) {
+  if (typeof subject !== 'string' || subject.length === 0) {
     return 'No subject';
   }
   const normalized = subject.replace(/\s+/g, ' ').trim();
@@ -85,7 +90,7 @@ function formatSubject(subject: string | null | undefined): string {
 }
 
 function formatUrl(url: string | null | undefined): string {
-  if (!url) {
+  if (typeof url !== 'string' || url.length === 0) {
     return 'No URL';
   }
   const trimmed = url.trim();
@@ -134,20 +139,20 @@ export async function fileBlame(
   try {
     const response = await client.query<FileBlameResponse>(FILE_BLAME_QUERY, variables);
 
-    if (!response.repository) {
+    if (response.repository === null) {
       return `Repository ${repo} not found.`;
     }
 
     const { commit } = response.repository;
     const revisionLabel = rev ?? 'HEAD';
 
-    if (!commit) {
+    if (commit === null) {
       return `Revision ${revisionLabel} not found in ${repo}.`;
     }
 
     const { blob } = commit;
 
-    if (!blob) {
+    if (blob === null) {
       return `File ${path} not found at ${revisionLabel} in ${repo}.`;
     }
 

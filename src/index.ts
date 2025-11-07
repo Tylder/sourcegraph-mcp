@@ -371,7 +371,7 @@ server.tool(
     const { repo, path, rev } = args as { repo: string; path: string; rev?: string };
     const typedFileBlame = fileBlame as (
       client: SourcegraphClient,
-      variables: { repo: string; path: string; rev?: string }
+      variables: { repo: string; path: string; rev?: string },
     ) => Promise<string>;
     const result = await typedFileBlame(sgClient, { repo, path, rev });
 
@@ -443,4 +443,4 @@ server.tool(
 const transport = new StdioServerTransport();
 await server.connect(transport);
 
-console.error('Sourcegraph MCP Server running on stdio');
+process.stderr.write('Sourcegraph MCP Server running on stdio\n');

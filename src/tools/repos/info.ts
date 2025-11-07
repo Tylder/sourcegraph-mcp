@@ -34,7 +34,7 @@ export interface RepoInfoParams {
 function formatCloneStatus(response: RepoInfoResponse['repository']): string {
   const mirrorInfo = response?.mirrorInfo;
 
-  if (!mirrorInfo) {
+  if (mirrorInfo === null || mirrorInfo === undefined) {
     return 'Unknown';
   }
 
@@ -43,7 +43,10 @@ function formatCloneStatus(response: RepoInfoResponse['repository']): string {
   }
 
   if (mirrorInfo.cloneInProgress) {
-    const progress = mirrorInfo.cloneProgress ?? 'in progress';
+    const progress =
+      typeof mirrorInfo.cloneProgress === 'string' && mirrorInfo.cloneProgress.length > 0
+        ? mirrorInfo.cloneProgress
+        : 'in progress';
     return `Cloning (${progress})`;
   }
 
@@ -73,7 +76,7 @@ export async function repoInfo(client: SourcegraphClient, params: RepoInfoParams
     const response = await client.query<RepoInfoResponse>(REPO_INFO_QUERY, { name });
     const { repository } = response;
 
-    if (!repository) {
+    if (repository === null) {
       return `Repository not found: ${name}`;
     }
 
@@ -81,7 +84,11 @@ export async function repoInfo(client: SourcegraphClient, params: RepoInfoParams
     output += `URL: ${repository.url}\n`;
 
     const description = repository.description?.trim();
-    output += `Description: ${description && description.length > 0 ? description : 'No description provided.'}\n`;
+    const descriptionLabel =
+      typeof description === 'string' && description.length > 0
+        ? description
+        : 'No description provided.';
+    output += `Description: ${descriptionLabel}\n`;
 
     output += `Default Branch: ${repository.defaultBranch?.displayName ?? 'Not set'}\n`;
     output += `Visibility: ${repository.isPrivate ? 'Private' : 'Public'}\n`;
@@ -95,7 +102,7 @@ export async function repoInfo(client: SourcegraphClient, params: RepoInfoParams
       stats.push(`Can Administer: ${repository.viewerCanAdminister ? 'Yes' : 'No'}`);
     }
 
-    if (repository.updatedAt) {
+    if (typeof repository.updatedAt === 'string' && repository.updatedAt.length > 0) {
       stats.push(`Last Updated: ${repository.updatedAt}`);
     }
 

@@ -86,7 +86,7 @@ interface NormalizedPath {
 }
 
 function normalizePath(path: string | undefined): NormalizedPath {
-  if (!path) {
+  if (typeof path !== 'string' || path.length === 0) {
     return { queryPath: '', displayPath: '/' };
   }
 
@@ -125,19 +125,19 @@ async function fetchTreeEntries(
 
   const { repository } = response;
 
-  if (!repository) {
+  if (repository === null) {
     throw new FileTreeError('REPOSITORY_NOT_FOUND', `Repository not found: ${repo}`);
   }
 
   const { commit } = repository;
 
-  if (!commit) {
+  if (commit === null) {
     throw new FileTreeError('REVISION_NOT_FOUND', `Revision not found: ${revision}`);
   }
 
   const { tree } = commit;
 
-  if (!tree) {
+  if (tree === null) {
     const missingPath = path === '' ? '/' : path;
     throw new FileTreeError('PATH_NOT_FOUND', `Path not found: ${missingPath}`);
   }
@@ -149,7 +149,7 @@ async function fetchTreeEntries(
   const submodules: FileTreeSubmoduleEntry[] = [];
 
   for (const entry of entries) {
-    if (entry.submodule) {
+    if (entry.submodule != null) {
       submodules.push({
         type: 'submodule',
         name: entry.name,
