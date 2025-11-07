@@ -13,7 +13,7 @@ export default tseslint.config(
     {
       languageOptions: {
         parserOptions: {
-          project: '/home/anon/coding-mcp/tsconfig.eslint.json',
+          project: '/home/anon/sourcegraph-mcp/tsconfig.eslint.json',
         },
       },
 

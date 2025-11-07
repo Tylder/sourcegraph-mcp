@@ -81,10 +81,12 @@ describe('searchCode', () => {
     });
 
     expect(queryMock).toHaveBeenCalledWith(expect.any(String), {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       query: expect.stringContaining('count:5'),
       version: 'V3',
     });
     expect(queryMock).toHaveBeenCalledWith(expect.any(String), {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       query: expect.stringContaining('timeout:5s'),
       version: 'V3',
     });

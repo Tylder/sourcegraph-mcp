@@ -60,12 +60,14 @@ describe('searchSymbols', () => {
     expect(queryMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         query: expect.stringContaining('type:symbol'),
       }),
     );
     expect(queryMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         query: expect.stringContaining('symbol:function OR symbol:class'),
       }),
     );
@@ -134,6 +136,7 @@ describe('searchSymbols', () => {
     expect(queryMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         query: expect.stringContaining('count:5'),
       }),
     );

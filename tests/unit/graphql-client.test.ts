@@ -67,6 +67,7 @@ describe('SourcegraphClient', () => {
     await instance.options.fetch('https://example.com/.api/graphql', { method: 'POST' });
     expect(fetchMock).toHaveBeenCalledWith('https://example.com/.api/graphql', {
       method: 'POST',
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       signal: expect.any(AbortSignal),
     });
   });

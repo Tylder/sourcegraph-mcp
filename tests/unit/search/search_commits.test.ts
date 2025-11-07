@@ -87,11 +87,12 @@ describe('searchCommits', () => {
     expect(queryMock).toHaveBeenCalledWith(
       COMMIT_SEARCH_QUERY,
       expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         query: expect.stringContaining('type:commit'),
       }),
     );
 
-    const queryString = queryMock.mock.calls[0][1].query;
+    const queryString = (queryMock.mock.calls[0][1] as { query: string }).query;
     expect(queryString).toContain('author:"Alice Example"');
     expect(queryString).toContain('after:2024-01-01');
     expect(queryString).toContain('before:2024-03-01');
