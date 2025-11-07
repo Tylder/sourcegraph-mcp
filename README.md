@@ -1,8 +1,8 @@
 # Sourcegraph MCP Server
 
 [![npm version](https://badge.fury.io/js/sourcegraph-mcp.svg)](https://www.npmjs.com/package/sourcegraph-mcp)
-[![CI](https://github.com/yourusername/sourcegraph-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/sourcegraph-mcp/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/yourusername/sourcegraph-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/sourcegraph-mcp)
+[![CI](https://github.com/Tylder/sourcegraph-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Tylder/sourcegraph-mcp/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Tylder/sourcegraph-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/Tylder/sourcegraph-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
@@ -157,7 +157,7 @@ file_tree({
 ### Setup
 
 ```bash
-git clone https://github.com/yourusername/sourcegraph-mcp.git
+git clone https://github.com/Tylder/sourcegraph-mcp.git
 cd sourcegraph-mcp
 npm install
 ```

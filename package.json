@@ -15,8 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix",
+    "lint": "eslint --cache --cache-location node_modules/.cache/eslint src/",
+    "lint:fix": "eslint --cache --cache-location node_modules/.cache/eslint src/ --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
@@ -37,6 +37,14 @@
   "engines": {
     "node": ">=22.0.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tylder/sourcegraph-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Tylder/sourcegraph-mcp/issues"
+  },
+  "homepage": "https://github.com/Tylder/sourcegraph-mcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.21.0",
     "graphql": "16.12.0",
@@ -49,9 +57,9 @@
     "@vitest/coverage-v8": "4.0.7",
     "eslint": "9.39.1",
     "husky": "9.1.7",
-    "lint-staged": "15.3.1",
+    "lint-staged": "16.2.6",
     "prettier": "3.6.2",
-    "tsx": "4.21.3",
+    "tsx": "4.20.6",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.3",
     "vitest": "4.0.7"

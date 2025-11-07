@@ -6,7 +6,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { z } from 'zod';
+import { z, type ZodTypeAny } from 'zod';
 import { getConfig, validateConfig } from './config.js';
 import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
@@ -44,27 +44,31 @@ server.tool(
   }
 );
 
+const searchCodeSchema: Record<string, ZodTypeAny> = {
+  query: z.string().describe('The search query (e.g., "repo:myrepo function auth")'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe('Maximum number of results (default: 10)'),
+};
+
 server.tool(
   'search_code',
   'Search for code in Sourcegraph using advanced query syntax. Supports filters like repo:, lang:, file:, etc.',
-  {
-    query: z.string().describe('The search query (e.g., "repo:myrepo function auth")'),
-    limit: z
-      .number()
-      .int()
-      .min(1)
-      .max(100)
-      .optional()
-      .describe('Maximum number of results (default: 10)'),
-  },
-  async (args) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  searchCodeSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
     const { query, limit } = args as { query: string; limit?: number };
     const result = await searchCode(sgClient, { query, limit });
 
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: result,
         },
       ],
@@ -72,24 +76,28 @@ server.tool(
   }
 );
 
+const searchSymbolsSchema: Record<string, ZodTypeAny> = {
+  query: z.string().describe('The search query (e.g., "repo:myrepo authenticate")'),
+  types: z
+    .array(z.string())
+    .optional()
+    .describe('Symbol types to filter (e.g., ["function", "class", "variable"])'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe('Maximum number of results (default: 10)'),
+};
+
 server.tool(
   'search_symbols',
   'Search for symbols (functions, classes, variables, etc.) in Sourcegraph',
-  {
-    query: z.string().describe('The search query (e.g., "repo:myrepo authenticate")'),
-    types: z
-      .array(z.string())
-      .optional()
-      .describe('Symbol types to filter (e.g., ["function", "class", "variable"])'),
-    limit: z
-      .number()
-      .int()
-      .min(1)
-      .max(100)
-      .optional()
-      .describe('Maximum number of results (default: 10)'),
-  },
-  async (args) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  searchSymbolsSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
     const { query, types, limit } = args as {
       query: string;
       types?: string[];
@@ -100,7 +108,7 @@ server.tool(
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: result,
         },
       ],
