@@ -320,3 +320,11 @@ export async function searchSymbols(
     return `Error searching symbols: ${message}`;
   }
 }
+
+export const __testHooks = {
+  normalizeTypeFilters,
+  quoteIfNeeded,
+  buildSearchQuery,
+  aliases: SYMBOL_KIND_ALIASES,
+  knownKinds: KNOWN_SYMBOL_KINDS,
+} as const;

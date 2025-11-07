@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { searchSymbols } from '../../../src/tools/search/search_symbols.js';
+import { searchSymbols, __testHooks } from '../../../src/tools/search/search_symbols.js';
 import type { SourcegraphClient } from '../../../src/graphql/client.js';
+import type { SearchSymbolsParams } from '../../../src/tools/search/search_symbols.js';
 
 describe('searchSymbols', () => {
   it('builds the search query with type filters, limit, and cursor', async () => {
@@ -99,7 +100,9 @@ describe('searchSymbols', () => {
     expect(output).toContain('Container: AuthService');
     expect(output).toContain('Repository: github.com/example/repo');
     expect(output).toContain('File: src/auth.ts');
-    expect(output).toContain('URL: https://sourcegraph.com/github.com/example/repo/-/blob/src/auth.ts#L11:5');
+    expect(output).toContain(
+      'URL: https://sourcegraph.com/github.com/example/repo/-/blob/src/auth.ts#L11:5'
+    );
     expect(output).toContain('Line: 11');
     expect(output).toContain('Column: 5');
   });
@@ -108,10 +111,7 @@ describe('searchSymbols', () => {
     const queryMock = vi.fn().mockResolvedValue({
       search: {
         results: {
-          results: [
-            { __typename: 'FileMatch' },
-            { __typename: 'CommitSearchResult' },
-          ],
+          results: [{ __typename: 'FileMatch' }, { __typename: 'CommitSearchResult' }],
           matchCount: 0,
           limitHit: false,
           pageInfo: { hasNextPage: false, endCursor: null },
@@ -175,8 +175,8 @@ describe('searchSymbols', () => {
                 url: 'https://example.com',
                 location: {
                   resource: {
-                    repository: { name: 'repo/name' },
-                    path: 'main.go',
+                    repository: null,
+                    path: null,
                   },
                   range: {
                     start: {
@@ -199,7 +199,79 @@ describe('searchSymbols', () => {
     const output = await searchSymbols(mockClient, { query: 'NoCoords' });
 
     expect(output).toContain('Result 1:');
+    expect(output).not.toContain('Repository:');
+    expect(output).not.toContain('File:');
     expect(output).not.toContain('Line:');
     expect(output).not.toContain('Column:');
+  });
+
+  it('handles results without pagination information', async () => {
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [
+            {
+              __typename: 'SymbolSearchResult',
+              symbol: {
+                name: 'Foo',
+                kind: 'CLASS',
+                language: 'Java',
+                url: 'https://example.com/foo',
+              },
+            },
+          ],
+          matchCount: 1,
+          limitHit: false,
+          pageInfo: null,
+        },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const output = await searchSymbols(mockClient, { query: 'Foo' });
+
+    expect(output).not.toContain('Has Next Page:');
+    expect(output).not.toContain('Next Page Cursor:');
+  });
+
+  it('returns error message for thrown Error instances', async () => {
+    const queryMock = vi.fn().mockRejectedValue(new Error('boom goes search'));
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const output = await searchSymbols(mockClient, { query: 'anything' });
+
+    expect(output).toBe('Error searching symbols: boom goes search');
+  });
+
+  it('falls back to known kinds when alias is absent', () => {
+    const { normalizeTypeFilters, aliases } = __testHooks;
+    const originalStruct = aliases.struct;
+    // Temporarily remove alias to force fallback path
+
+    delete aliases.struct;
+
+    try {
+      const result = normalizeTypeFilters(['STRUCT']);
+      expect(result.accepted).toContain('STRUCT');
+    } finally {
+      aliases.struct = originalStruct;
+    }
+  });
+
+  it('quotes type filters containing whitespace', () => {
+    const { buildSearchQuery } = __testHooks;
+    const params = { query: 'foo', limit: 5 } as SearchSymbolsParams;
+    const { query } = buildSearchQuery(params, ['WITH SPACE']);
+
+    expect(query).toContain('kind:"WITH SPACE"');
+  });
+
+  it('omits empty user query segments', () => {
+    const { buildSearchQuery } = __testHooks;
+    const params = { query: '   ', limit: 7 } as SearchSymbolsParams;
+    const { query, requested } = buildSearchQuery(params, []);
+
+    expect(query).toBe('type:symbol count:7');
+    expect(requested).toBe(7);
   });
 });
