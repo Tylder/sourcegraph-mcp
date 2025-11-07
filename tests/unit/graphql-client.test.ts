@@ -57,7 +57,7 @@ describe('SourcegraphClient', () => {
 
     expect(client).toBeInstanceOf(SourcegraphClient);
     expect(clientInstances).toHaveLength(1);
-    const instance = clientInstances[0];
+    const [instance] = clientInstances;
     expect(instance.endpoint).toBe('https://example.com/.api/graphql');
     expect(instance.options.headers).toEqual({
       Authorization: 'token token-123',

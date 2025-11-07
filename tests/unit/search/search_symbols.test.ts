@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { searchSymbols, __testHooks, type SearchSymbolsParams } from '../../../src/tools/search/search_symbols.js';
+import {
+  searchSymbols,
+  __testHooks,
+  type SearchSymbolsParams,
+} from '../../../src/tools/search/search_symbols.js';
 import type { SourcegraphClient } from '../../../src/graphql/client.js';
 
 describe('searchSymbols', () => {

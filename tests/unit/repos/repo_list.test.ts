@@ -4,40 +4,39 @@ import type { SourcegraphClient } from '../../../src/graphql/client.js';
 
 describe('repoList', () => {
   it('formats repository list with metadata and ordering', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repositories: {
-          nodes: [
-            {
-              name: 'github.com/sourcegraph/sourcegraph',
-              url: 'https://sourcegraph.com/github.com/sourcegraph/sourcegraph',
-              description: 'Code intelligence platform',
-              isPrivate: false,
-              isFork: false,
-              isArchived: false,
-              viewerCanAdminister: true,
-              mirrorInfo: { cloned: true, cloneInProgress: false },
-              defaultBranch: { displayName: 'main' },
-              updatedAt: '2024-01-01T00:00:00Z',
-            },
-            {
-              name: 'github.com/example/archived',
-              url: 'https://sourcegraph.com/github.com/example/archived',
-              description: null,
-              isPrivate: true,
-              isFork: true,
-              isArchived: true,
-              viewerCanAdminister: false,
-              mirrorInfo: { cloned: false, cloneInProgress: true },
-              defaultBranch: null,
-              updatedAt: '2023-12-25T15:00:00Z',
-            },
-          ],
-          totalCount: 2,
-          pageInfo: { hasNextPage: true, endCursor: 'next-cursor' },
-        },
-      }),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockResolvedValue({
+      repositories: {
+        nodes: [
+          {
+            name: 'github.com/sourcegraph/sourcegraph',
+            url: 'https://sourcegraph.com/github.com/sourcegraph/sourcegraph',
+            description: 'Code intelligence platform',
+            isPrivate: false,
+            isFork: false,
+            isArchived: false,
+            viewerCanAdminister: true,
+            mirrorInfo: { cloned: true, cloneInProgress: false },
+            defaultBranch: { displayName: 'main' },
+            updatedAt: '2024-01-01T00:00:00Z',
+          },
+          {
+            name: 'github.com/example/archived',
+            url: 'https://sourcegraph.com/github.com/example/archived',
+            description: null,
+            isPrivate: true,
+            isFork: true,
+            isArchived: true,
+            viewerCanAdminister: false,
+            mirrorInfo: { cloned: false, cloneInProgress: true },
+            defaultBranch: null,
+            updatedAt: '2023-12-25T15:00:00Z',
+          },
+        ],
+        totalCount: 2,
+        pageInfo: { hasNextPage: true, endCursor: 'next-cursor' },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await repoList(mockClient, {
       query: 'sourcegraph',
@@ -68,15 +67,14 @@ describe('repoList', () => {
   });
 
   it('sends defaulted variables to the query', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repositories: {
-          nodes: [],
-          totalCount: 0,
-          pageInfo: { hasNextPage: false, endCursor: null },
-        },
-      }),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockResolvedValue({
+      repositories: {
+        nodes: [],
+        totalCount: 0,
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const params: RepoListParams = {
       query: '  repo-pattern  ',
@@ -85,7 +83,7 @@ describe('repoList', () => {
 
     await repoList(mockClient, params);
 
-    expect(mockClient.query).toHaveBeenCalledWith(
+    expect(queryMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         first: 20,
@@ -97,21 +95,20 @@ describe('repoList', () => {
   });
 
   it('honors custom ordering preferences', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repositories: {
-          nodes: [],
-          totalCount: 0,
-          pageInfo: { hasNextPage: false, endCursor: null },
-        },
-      }),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockResolvedValue({
+      repositories: {
+        nodes: [],
+        totalCount: 0,
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await repoList(mockClient, {
       orderBy: { field: 'STARS', direction: 'DESC' },
     });
 
-    expect(mockClient.query).toHaveBeenCalledWith(
+    expect(queryMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         orderBy: { field: 'STARS', direction: 'DESC' },
@@ -120,15 +117,14 @@ describe('repoList', () => {
   });
 
   it('handles empty repositories gracefully', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repositories: {
-          nodes: [],
-          totalCount: 0,
-          pageInfo: { hasNextPage: false, endCursor: null },
-        },
-      }),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockResolvedValue({
+      repositories: {
+        nodes: [],
+        totalCount: 0,
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await repoList(mockClient, {});
 
@@ -137,9 +133,8 @@ describe('repoList', () => {
   });
 
   it('reports errors from the GraphQL client', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue(new Error('GraphQL failure')),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockRejectedValue(new Error('GraphQL failure'));
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await repoList(mockClient, {});
 
@@ -147,9 +142,8 @@ describe('repoList', () => {
   });
 
   it('surfaces non-Error rejection reasons', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue('network issue'),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockRejectedValue('network issue');
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await repoList(mockClient, {});
 
@@ -157,28 +151,27 @@ describe('repoList', () => {
   });
 
   it('omits status line when repository has no notable flags', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repositories: {
-          nodes: [
-            {
-              name: 'github.com/sourcegraph/clean-repo',
-              url: 'https://sourcegraph.com/github.com/sourcegraph/clean-repo',
-              description: null,
-              isPrivate: false,
-              isFork: false,
-              isArchived: false,
-              viewerCanAdminister: false,
-              mirrorInfo: null,
-              defaultBranch: null,
-              updatedAt: '2024-02-02T00:00:00Z',
-            },
-          ],
-          totalCount: 1,
-          pageInfo: { hasNextPage: false, endCursor: null },
-        },
-      }),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockResolvedValue({
+      repositories: {
+        nodes: [
+          {
+            name: 'github.com/sourcegraph/clean-repo',
+            url: 'https://sourcegraph.com/github.com/sourcegraph/clean-repo',
+            description: null,
+            isPrivate: false,
+            isFork: false,
+            isArchived: false,
+            viewerCanAdminister: false,
+            mirrorInfo: null,
+            defaultBranch: null,
+            updatedAt: '2024-02-02T00:00:00Z',
+          },
+        ],
+        totalCount: 1,
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await repoList(mockClient, {});
 

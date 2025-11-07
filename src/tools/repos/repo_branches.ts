@@ -75,17 +75,17 @@ export async function repoBranches(
         first: pageSize,
       };
 
-      if (trimmedQuery) {
+      if (typeof trimmedQuery === 'string' && trimmedQuery.length > 0) {
         variables.query = trimmedQuery;
       }
 
-      if (afterCursor) {
+      if (typeof afterCursor === 'string' && afterCursor.length > 0) {
         variables.after = afterCursor;
       }
 
       const response = await client.query<RepoBranchesResponse>(REPO_BRANCHES_QUERY, variables);
 
-      if (!response.repository) {
+      if (response.repository === null) {
         repositoryInfo = null;
         break;
       }
@@ -105,7 +105,7 @@ export async function repoBranches(
         break;
       }
 
-      if (hasNextPage && endCursor) {
+      if (hasNextPage && typeof endCursor === 'string' && endCursor.length > 0) {
         afterCursor = endCursor;
         moreAvailable = true;
       } else {
@@ -114,7 +114,7 @@ export async function repoBranches(
       }
     }
 
-    if (!repositoryInfo) {
+    if (repositoryInfo === null) {
       return `Repository not found: ${repo}`;
     }
 
@@ -124,11 +124,11 @@ export async function repoBranches(
     output += `URL: ${repositoryInfo.url}\n`;
 
     const defaultBranchName = repositoryInfo.defaultBranch?.displayName;
-    if (defaultBranchName) {
+    if (typeof defaultBranchName === 'string' && defaultBranchName.length > 0) {
       output += `Default Branch: ${defaultBranchName}\n`;
     }
 
-    if (trimmedQuery) {
+    if (typeof trimmedQuery === 'string' && trimmedQuery.length > 0) {
       output += `Filter: ${trimmedQuery}\n`;
     }
 
@@ -136,7 +136,7 @@ export async function repoBranches(
 
     if (branchNodes.length === 0) {
       output += 'No branches found.\n';
-      if (trimmedQuery) {
+      if (typeof trimmedQuery === 'string' && trimmedQuery.length > 0) {
         output += 'Try adjusting your filter or increasing the limit.';
       }
       return output;
@@ -149,20 +149,20 @@ export async function repoBranches(
 
       output += `Branch ${(index + 1).toString()}: ${branchLabel}\n`;
 
-      if (branch.name) {
+      if (typeof branch.name === 'string' && branch.name.length > 0) {
         output += `  Name: ${branch.name}\n`;
       }
 
-      if (abbreviatedName) {
+      if (typeof abbreviatedName === 'string' && abbreviatedName.length > 0) {
         output += `  Abbreviated: ${abbreviatedName}\n`;
       }
 
       const targetOid = branch.target?.abbreviatedOID ?? branch.target?.oid;
-      if (targetOid) {
+      if (typeof targetOid === 'string' && targetOid.length > 0) {
         output += `  Target: ${targetOid}\n`;
       }
 
-      if (branch.url) {
+      if (typeof branch.url === 'string' && branch.url.length > 0) {
         output += `  URL: ${branch.url}\n`;
       }
 

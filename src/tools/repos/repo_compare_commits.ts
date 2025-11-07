@@ -75,31 +75,58 @@ const DEFAULT_DIFF_LIMIT = 20;
 const MAX_HUNK_LINES = 8;
 
 function resolveAuthor(author: CommitAuthor | null | undefined): string {
-  if (!author) {return 'Unknown';}
+  if (author === null || author === undefined) {
+    return 'Unknown';
+  }
+
   const { person } = author;
   const name = [person?.displayName, person?.name, person?.email]
-    .map((value) => value?.trim())
-    .find((value): value is string => Boolean(value && value.length > 0));
-  const date = author.date?.trim();
-  if (name && date) {return `${name} (${date})`;}
-  if (name) {return name;}
-  if (date) {return date;}
+    .map((value) => (typeof value === 'string' ? value.trim() : undefined))
+    .find((value): value is string => value !== undefined && value.length > 0);
+
+  const date = typeof author.date === 'string' ? author.date.trim() : undefined;
+
+  if (name !== undefined && date !== undefined) {
+    return `${name} (${date})`;
+  }
+  if (name !== undefined) {
+    return name;
+  }
+  if (date !== undefined) {
+    return date;
+  }
   return 'Unknown';
 }
 
 function formatRange(range: ComparisonHunkRange | null | undefined, prefix: string): string {
-  if (range?.startLine == null) {return `${prefix}∅`;}
-  if (range.lines == null) {return `${prefix}${range.startLine.toString()}`;}
-  return `${prefix}${range.startLine.toString()},${range.lines.toString()}`;
+  if (range?.startLine == null) {
+    return `${prefix}∅`;
+  }
+  const { startLine, lines } = range;
+  if (lines == null) {
+    return `${prefix}${startLine.toString()}`;
+  }
+  return `${prefix}${startLine.toString()},${lines.toString()}`;
 }
 
 function describeDiff(diff: ComparisonFileDiff): string {
   const { oldPath, newPath } = diff;
-  if (oldPath && newPath && oldPath !== newPath) {return `renamed from ${oldPath} to ${newPath}`;}
-  if (!oldPath && newPath) {return `added ${newPath}`;}
-  if (oldPath && !newPath) {return `deleted ${oldPath}`;}
-  const target = newPath ?? oldPath;
-  return target ? `modified ${target}` : 'modified unknown file';
+  const hasOldPath = typeof oldPath === 'string' && oldPath.length > 0;
+  const hasNewPath = typeof newPath === 'string' && newPath.length > 0;
+
+  if (hasOldPath && hasNewPath && oldPath !== newPath) {
+    return `renamed from ${oldPath} to ${newPath}`;
+  }
+  if (!hasOldPath && hasNewPath) {
+    return `added ${newPath}`;
+  }
+  if (hasOldPath && !hasNewPath) {
+    return `deleted ${oldPath}`;
+  }
+  const target = hasNewPath ? newPath : hasOldPath ? oldPath : undefined;
+  return typeof target === 'string' && target.length > 0
+    ? `modified ${target}`
+    : 'modified unknown file';
 }
 
 function summariseHunk(hunk: ComparisonHunk, index: number): string[] {
@@ -136,7 +163,7 @@ function summariseFileDiff(diff: ComparisonFileDiff, index: number): string[] {
   } else {
     lines.push('     Stats: unavailable.');
   }
-  if (!diff.hunks.length) {
+  if (diff.hunks.length === 0) {
     lines.push('     No diff hunks available (file may be binary or diff omitted).');
     return lines;
   }
@@ -149,10 +176,13 @@ function summariseFileDiff(diff: ComparisonFileDiff, index: number): string[] {
 function summariseCommit(commit: ComparisonCommit, index: number): string[] {
   const identifier = commit.abbreviatedOID ?? commit.oid;
   const trimmedSubject = commit.subject?.trim();
-  const subject = trimmedSubject && trimmedSubject.length > 0 ? trimmedSubject : '(no subject)';
+  const subject =
+    typeof trimmedSubject === 'string' && trimmedSubject.length > 0
+      ? trimmedSubject
+      : '(no subject)';
   const lines = [`  ${(index + 1).toString()}. ${identifier} - ${subject}`];
   lines.push(`     Author: ${resolveAuthor(commit.author)}`);
-  if (commit.url) {
+  if (typeof commit.url === 'string' && commit.url.length > 0) {
     lines.push(`     URL: ${commit.url}`);
   }
   return lines;
@@ -186,15 +216,15 @@ export async function repoCompareCommits(
   const base = params.baseRev.trim();
   const head = params.headRev.trim();
 
-  if (!repo) {
+  if (repo.length === 0) {
     return 'Repository name is required.';
   }
 
-  if (!base) {
+  if (base.length === 0) {
     return 'Base revision is required for comparison.';
   }
 
-  if (!head) {
+  if (head.length === 0) {
     return 'Head revision is required for comparison.';
   }
 
@@ -212,13 +242,13 @@ export async function repoCompareCommits(
       variables,
     );
 
-    if (!response.repository) {
+    if (response.repository === null) {
       return `Repository not found: ${repo}`;
     }
 
     const { comparison } = response.repository;
 
-    if (!comparison) {
+    if (comparison === null) {
       return `No comparison available between ${base} and ${head} in ${repo}.`;
     }
 

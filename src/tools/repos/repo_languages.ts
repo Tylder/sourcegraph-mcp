@@ -174,12 +174,17 @@ function buildBreakdown(
   const sanitized = stats
     .filter((stat) => isFiniteNumber(stat.totalBytes) && stat.totalBytes >= 0)
     .map<RepoLanguageBreakdown>((stat) => {
-      const color = stat.color?.trim();
+      const trimmedDisplayName = stat.displayName?.trim();
+      const trimmedColor = stat.color?.trim();
 
       return {
         name: stat.name,
-        displayName: stat.displayName?.trim() ? stat.displayName.trim() : stat.name,
-        color: color && color.length > 0 ? color : undefined,
+        displayName:
+          typeof trimmedDisplayName === 'string' && trimmedDisplayName.length > 0
+            ? trimmedDisplayName
+            : stat.name,
+        color:
+          typeof trimmedColor === 'string' && trimmedColor.length > 0 ? trimmedColor : undefined,
         totalBytes: stat.totalBytes,
         totalLines: isFiniteNumber(stat.totalLines) ? stat.totalLines : undefined,
         share: { ratio: 0, percentage: 0 },
@@ -211,7 +216,7 @@ export async function repoLanguages(
     });
     const { repository } = response;
 
-    if (!repository) {
+    if (repository === null) {
       return `Repository not found: ${repo}`;
     }
 

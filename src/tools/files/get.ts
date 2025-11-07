@@ -43,19 +43,19 @@ export async function fileGet(client: SourcegraphClient, params: FileGetParams):
   try {
     const response = await client.query<FileContentResponse>(FILE_CONTENT_QUERY, variables);
 
-    if (!response.repository) {
+    if (response.repository === null) {
       return `Repository ${repo} not found.`;
     }
 
     const { commit } = response.repository;
 
-    if (!commit) {
+    if (commit === null) {
       return `Revision ${revisionLabel} not found in ${repo}.`;
     }
 
     const { blob } = commit;
 
-    if (!blob) {
+    if (blob === null) {
       return `File ${path} not found at ${revisionLabel} in ${repo}.`;
     }
 
@@ -68,7 +68,7 @@ export async function fileGet(client: SourcegraphClient, params: FileGetParams):
       `Size: ${blob.byteSize.toString()} bytes`,
     ];
 
-    if (blob.highlight?.aborted) {
+    if (blob.highlight?.aborted === true) {
       metadataLines.push('Warning: Syntax highlighting was aborted due to timeout.');
     }
 
@@ -77,7 +77,7 @@ export async function fileGet(client: SourcegraphClient, params: FileGetParams):
       return `${metadataLines.join('\n')}\n`;
     }
 
-    if (!blob.content) {
+    if (typeof blob.content !== 'string' || blob.content.length === 0) {
       metadataLines.push('', 'No content available for this file.');
       return `${metadataLines.join('\n')}\n`;
     }

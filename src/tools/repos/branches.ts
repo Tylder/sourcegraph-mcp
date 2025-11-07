@@ -53,13 +53,13 @@ export async function repoBranches(
       first: limit,
     };
 
-    if (trimmedQuery) {
+    if (typeof trimmedQuery === 'string' && trimmedQuery.length > 0) {
       variables.query = trimmedQuery;
     }
 
     const response = await client.query<RepoBranchesResponse>(REPO_BRANCHES_QUERY, variables);
 
-    if (!response.repository) {
+    if (response.repository === null) {
       return `Repository not found: ${repo}`;
     }
 
@@ -69,11 +69,11 @@ export async function repoBranches(
     let output = `Repository: ${name}\n`;
     output += `URL: ${url}\n`;
 
-    if (defaultBranch?.displayName) {
+    if (typeof defaultBranch?.displayName === 'string' && defaultBranch.displayName.length > 0) {
       output += `Default Branch: ${defaultBranch.displayName}\n`;
     }
 
-    if (trimmedQuery) {
+    if (typeof trimmedQuery === 'string' && trimmedQuery.length > 0) {
       output += `Filter: ${trimmedQuery}\n`;
     }
 
@@ -81,7 +81,7 @@ export async function repoBranches(
 
     if (branchNodes.length === 0) {
       output += 'No branches found.\n';
-      if (trimmedQuery) {
+      if (typeof trimmedQuery === 'string' && trimmedQuery.length > 0) {
         output += 'Try adjusting your filter or increasing the limit.';
       }
       return output;
@@ -95,27 +95,27 @@ export async function repoBranches(
         'unknown';
       output += `Branch ${(index + 1).toString()}: ${branchLabel}\n`;
 
-      if (branch.name) {
+      if (typeof branch.name === 'string' && branch.name.length > 0) {
         output += `  Name: ${branch.name}\n`;
       }
 
-      if (branch.abbreviatedName) {
+      if (typeof branch.abbreviatedName === 'string' && branch.abbreviatedName.length > 0) {
         output += `  Abbreviated: ${branch.abbreviatedName}\n`;
       }
 
       const targetOid = branch.target?.abbreviatedOID ?? branch.target?.oid;
-      if (targetOid) {
+      if (typeof targetOid === 'string' && targetOid.length > 0) {
         output += `  Target: ${targetOid}\n`;
       }
 
-      if (branch.url) {
+      if (typeof branch.url === 'string' && branch.url.length > 0) {
         output += `  URL: ${branch.url}\n`;
       }
 
       output += '\n';
     });
 
-    if (branches?.pageInfo.hasNextPage) {
+    if (branches?.pageInfo.hasNextPage === true) {
       output += `Note: Additional branches available beyond the ${limit.toString()} shown.\n`;
     }
 

@@ -82,11 +82,11 @@ function buildQueryVariables(params: RepoListParams): RepositoryListQueryVariabl
     },
   };
 
-  if (trimmedQuery) {
+  if (typeof trimmedQuery === 'string' && trimmedQuery.length > 0) {
     variables.query = trimmedQuery;
   }
 
-  if (params.after) {
+  if (typeof params.after === 'string' && params.after.length > 0) {
     variables.after = params.after;
   }
 
@@ -113,7 +113,7 @@ function formatRepositoryStatus(repository: RepositoryNode): string | undefined 
   }
 
   const { mirrorInfo } = repository;
-  if (mirrorInfo) {
+  if (mirrorInfo != null) {
     if (!mirrorInfo.cloned) {
       statuses.push('not cloned');
     }
@@ -131,11 +131,16 @@ function formatRepositoryDetails(repository: RepositoryNode, index: number): str
     `Repository ${(index + 1).toString()}:`,
     `Name: ${repository.name}`,
     `URL: ${repository.url}`,
-    repository.description ? `Description: ${repository.description}` : undefined,
-    formatRepositoryStatus(repository),
-    repository.defaultBranch?.displayName
-      ? `Default Branch: ${repository.defaultBranch.displayName}`
+    typeof repository.description === 'string' && repository.description.length > 0
+      ? `Description: ${repository.description}`
       : undefined,
+    formatRepositoryStatus(repository),
+    (() => {
+      const displayName = repository.defaultBranch?.displayName;
+      return typeof displayName === 'string' && displayName.length > 0
+        ? `Default Branch: ${displayName}`
+        : undefined;
+    })(),
     `Updated At: ${repository.updatedAt}`,
   ];
 
@@ -158,15 +163,19 @@ export async function repoList(client: SourcegraphClient, params: RepoListParams
       `Order: ${variables.orderBy.field} (${variables.orderBy.direction})`,
     ];
 
-    if (variables.query) {
+    if (typeof variables.query === 'string' && variables.query.length > 0) {
       summaryLines.splice(3, 0, `Query: ${variables.query}`);
     }
 
-    if (variables.after) {
+    if (typeof variables.after === 'string' && variables.after.length > 0) {
       summaryLines.push(`Starting Cursor: ${variables.after}`);
     }
 
-    if (repositories.pageInfo.hasNextPage && repositories.pageInfo.endCursor) {
+    if (
+      repositories.pageInfo.hasNextPage &&
+      typeof repositories.pageInfo.endCursor === 'string' &&
+      repositories.pageInfo.endCursor.length > 0
+    ) {
       summaryLines.push(`Next Page Cursor: ${repositories.pageInfo.endCursor}`);
     }
 
