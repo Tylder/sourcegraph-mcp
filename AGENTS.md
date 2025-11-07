@@ -261,6 +261,35 @@ Every tool must have:
 - Error conditions
 - GraphQL query used
 
+### Merging Multiple Feature Branches
+
+When merging multiple parallel feature branches that each add independent files but modify the same central integration file (e.g., index.ts):
+
+**Use `git checkout <branch> -- <files>` instead of `git merge`:**
+
+```bash
+# For each feature branch, cherry-pick only its specific files:
+git checkout origin/feature-1 -- src/tools/feature1.ts tests/unit/tools/feature1.test.ts
+git checkout origin/feature-2 -- src/tools/feature2.ts tests/unit/tools/feature2.test.ts
+git checkout origin/feature-3 -- src/tools/feature3.ts tests/unit/tools/feature3.test.ts
+
+# Then manually update central integration files:
+# - Update index.ts to register all new tools
+# - Combine any shared query/type files
+# - Test everything together
+```
+
+**When to use this pattern:**
+- ✓ Multiple parallel feature branches
+- ✓ Each adds independent files (tools, tests, queries)
+- ✓ One central file (index.ts) ties them together
+- ✗ Don't use if branches heavily modify shared code
+
+**Advantages:**
+- No merge conflicts in feature files
+- Central integration done once, manually, with full context
+- Cleaner git history
+
 ### Release Process
 
 1. Update version in package.json (semantic versioning)
