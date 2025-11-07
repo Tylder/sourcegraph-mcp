@@ -45,7 +45,9 @@ describe('searchCommits', () => {
     });
     const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    const result = await searchCommits(mockClient, { query: 'repo:sourcegraph type:commit search' });
+    const result = await searchCommits(mockClient, {
+      query: 'repo:sourcegraph type:commit search',
+    });
 
     expect(result).toContain('Search Query: repo:sourcegraph type:commit search');
     expect(result).toContain('Repository: github.com/sourcegraph/test');
@@ -108,7 +110,9 @@ describe('searchCommits', () => {
     });
     const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    const result = await searchCommits(mockClient, { query: 'repo:sourcegraph nonexistent change' });
+    const result = await searchCommits(mockClient, {
+      query: 'repo:sourcegraph nonexistent change',
+    });
 
     expect(result).toContain('No commits found');
   });

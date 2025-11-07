@@ -4,7 +4,10 @@ const fetchMock = vi.fn();
 const { requestMock, clientInstances } = vi.hoisted(() => {
   return {
     requestMock: vi.fn(),
-    clientInstances: [] as { endpoint: string; options: { headers: Record<string, string>; fetch: typeof fetch } }[],
+    clientInstances: [] as {
+      endpoint: string;
+      options: { headers: Record<string, string>; fetch: typeof fetch };
+    }[],
   };
 });
 
@@ -13,7 +16,10 @@ vi.mock('graphql-request', () => {
     endpoint: string;
     options: { headers: Record<string, string>; fetch: typeof fetch };
 
-    constructor(endpoint: string, options: { headers: Record<string, string>; fetch: typeof fetch }) {
+    constructor(
+      endpoint: string,
+      options: { headers: Record<string, string>; fetch: typeof fetch }
+    ) {
       this.endpoint = endpoint;
       this.options = options;
       clientInstances.push({ endpoint, options });
@@ -88,7 +94,9 @@ describe('SourcegraphClient', () => {
       logLevel: 'info',
     });
 
-    await expect(client.query('query { test }')).rejects.toThrow('GraphQL query failed: network down');
+    await expect(client.query('query { test }')).rejects.toThrow(
+      'GraphQL query failed: network down'
+    );
   });
 
   it('passes through non-error rejections', async () => {

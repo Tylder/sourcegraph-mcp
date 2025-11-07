@@ -183,11 +183,14 @@ npm install
 # Development mode with auto-reload
 npm run dev
 
-# Run tests
+# Run all tests (unit + integration)
 npm test
 
 # Run tests with coverage
 npm run coverage
+
+# Run integration tests only
+npm run test:integration
 
 # Lint code
 npm run lint

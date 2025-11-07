@@ -12,12 +12,20 @@ describe('searchCode', () => {
             approximateResultCount: '3',
             limitHit: false,
             dynamicFilters: [
-              { value: 'lang:typescript', label: 'Language: TypeScript', count: 2, kind: 'LANGUAGE' },
+              {
+                value: 'lang:typescript',
+                label: 'Language: TypeScript',
+                count: 2,
+                kind: 'LANGUAGE',
+              },
             ],
             results: [
               {
                 __typename: 'FileMatch',
-                repository: { name: 'github.com/sourcegraph/example', url: 'https://example.com/repo' },
+                repository: {
+                  name: 'github.com/sourcegraph/example',
+                  url: 'https://example.com/repo',
+                },
                 file: {
                   path: 'src/index.ts',
                   url: 'https://example.com/repo/-/blob/src/index.ts',
@@ -39,7 +47,10 @@ describe('searchCode', () => {
               {
                 __typename: 'CommitSearchResult',
                 commit: {
-                  repository: { name: 'github.com/sourcegraph/example', url: 'https://example.com/repo' },
+                  repository: {
+                    name: 'github.com/sourcegraph/example',
+                    url: 'https://example.com/repo',
+                  },
                   oid: '1234567890abcdef',
                   abbreviatedOID: '1234567',
                   url: 'https://example.com/commit/1234567',
@@ -259,7 +270,10 @@ describe('searchCode', () => {
               },
               {
                 __typename: 'FileMatch',
-                repository: { name: 'github.com/sourcegraph/example', url: 'https://example.com/repo' },
+                repository: {
+                  name: 'github.com/sourcegraph/example',
+                  url: 'https://example.com/repo',
+                },
                 file: { path: 'src/index.ts', url: 'https://example.com/blob' },
                 lineMatches: [],
               },
@@ -318,7 +332,10 @@ describe('searchCode', () => {
             results: [
               {
                 __typename: 'FileMatch',
-                repository: { name: 'github.com/sourcegraph/example', url: 'https://example.com/repo' },
+                repository: {
+                  name: 'github.com/sourcegraph/example',
+                  url: 'https://example.com/repo',
+                },
                 file: { path: 'src/index.ts', url: 'https://example.com/blob' },
                 lineMatches: [
                   {

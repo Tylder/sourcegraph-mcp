@@ -121,13 +121,10 @@ describe('repoBranches', () => {
       query: '   ',
     });
 
-    expect(queryMock).toHaveBeenCalledWith(
-      expect.any(String),
-      {
-        name: 'github.com/sourcegraph/sourcegraph',
-        first: 20,
-      }
-    );
+    expect(queryMock).toHaveBeenCalledWith(expect.any(String), {
+      name: 'github.com/sourcegraph/sourcegraph',
+      first: 20,
+    });
   });
 
   it('handles repository not being found', async () => {

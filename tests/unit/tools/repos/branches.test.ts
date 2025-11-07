@@ -107,13 +107,10 @@ describe('repoBranches', () => {
 
     await repoBranches(mockClient, { repo: 'repo', query: '   ' });
 
-    expect(mockClient.query).toHaveBeenCalledWith(
-      expect.any(String),
-      {
-        name: 'repo',
-        first: 20,
-      }
-    );
+    expect(mockClient.query).toHaveBeenCalledWith(expect.any(String), {
+      name: 'repo',
+      first: 20,
+    });
   });
 
   it('should handle repository not found', async () => {

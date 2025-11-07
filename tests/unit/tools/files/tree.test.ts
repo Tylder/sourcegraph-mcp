@@ -74,7 +74,7 @@ describe('fileTree', () => {
       expect.objectContaining({
         repo: 'github.com/test/repo',
         path: '',
-        rev: null,
+        rev: 'HEAD',
       })
     );
     expect(result).toContain('Revision: HEAD');

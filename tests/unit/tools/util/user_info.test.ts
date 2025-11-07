@@ -84,8 +84,6 @@ describe('getUserInfo', () => {
       query: vi.fn().mockRejectedValue('boom'),
     } as unknown as SourcegraphClient;
 
-    await expect(getUserInfo(mockClient)).rejects.toThrow(
-      'Failed to fetch user info: boom'
-    );
+    await expect(getUserInfo(mockClient)).rejects.toThrow('Failed to fetch user info: boom');
   });
 });

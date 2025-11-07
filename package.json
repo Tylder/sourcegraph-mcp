@@ -15,14 +15,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "lint": "eslint --cache --cache-location node_modules/.cache/eslint src/",
-    "lint:fix": "eslint --cache --cache-location node_modules/.cache/eslint src/ --fix",
+    "test:integration": "vitest run tests/integration",
+    "lint": "eslint --cache --cache-location node_modules/.cache/eslint src/ tests/",
+    "lint:fix": "eslint --cache --cache-location node_modules/.cache/eslint src/ tests/ --fix",
     "lint-staged": "lint-staged",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "prepare": "husky",
-    "prepublishOnly": "npm run build && npm run test && npm run lint"
+    "prepublishOnly": "npm run build && npm run test && npm run lint",
+    "agent:post-report": "npm run lint && npm run format:check && npm run typecheck && npm run coverage && npm run build"
   },
   "keywords": [
     "mcp",

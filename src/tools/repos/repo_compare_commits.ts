@@ -48,11 +48,11 @@ interface RepoComparisonResponse {
     comparison: {
       commits: {
         nodes: ComparisonCommit[];
-        totalCount: number;
+        totalCount: number | null;
       };
       fileDiffs: {
         nodes: ComparisonFileDiff[];
-        totalCount: number;
+        totalCount: number | null;
       };
     } | null;
   } | null;
@@ -230,7 +230,7 @@ export async function repoCompareCommits(
     lines.push('');
 
     const commitNodes = comparison.commits.nodes;
-    const commitTotal = comparison.commits.totalCount.toString();
+    const commitTotal = comparison.commits.totalCount?.toString() ?? 'unknown';
     lines.push(`Commits: showing ${commitNodes.length.toString()} of ${commitTotal} total`);
 
     if (commitNodes.length === 0) {
@@ -244,7 +244,7 @@ export async function repoCompareCommits(
     lines.push('');
 
     const fileDiffNodes = comparison.fileDiffs.nodes;
-    const diffTotal = comparison.fileDiffs.totalCount.toString();
+    const diffTotal = comparison.fileDiffs.totalCount?.toString() ?? 'unknown';
     lines.push(`File Diffs: showing ${fileDiffNodes.length.toString()} of ${diffTotal} total`);
 
     if (fileDiffNodes.length === 0) {

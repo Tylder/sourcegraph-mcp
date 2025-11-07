@@ -55,7 +55,9 @@ describe('validateConfig', () => {
       logLevel: 'info' as const,
     };
 
-    expect(() => validateConfig(config)).not.toThrow();
+    expect(() => {
+      validateConfig(config);
+    }).not.toThrow();
   });
 
   it('should throw for invalid endpoint URL', () => {
@@ -66,7 +68,9 @@ describe('validateConfig', () => {
       logLevel: 'info' as const,
     };
 
-    expect(() => validateConfig(config)).toThrow('Invalid Sourcegraph endpoint URL');
+    expect(() => {
+      validateConfig(config);
+    }).toThrow('Invalid Sourcegraph endpoint URL');
   });
 
   it('should throw for missing endpoint', () => {
@@ -77,7 +81,9 @@ describe('validateConfig', () => {
       logLevel: 'info' as const,
     };
 
-    expect(() => validateConfig(config)).toThrow('Sourcegraph endpoint is required');
+    expect(() => {
+      validateConfig(config);
+    }).toThrow('Sourcegraph endpoint is required');
   });
 
   it('should throw for missing access token', () => {
@@ -88,6 +94,8 @@ describe('validateConfig', () => {
       logLevel: 'info' as const,
     };
 
-    expect(() => validateConfig(config)).toThrow('Sourcegraph access token is required');
+    expect(() => {
+      validateConfig(config);
+    }).toThrow('Sourcegraph access token is required');
   });
 });

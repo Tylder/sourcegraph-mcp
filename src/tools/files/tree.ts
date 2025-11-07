@@ -64,7 +64,7 @@ export async function fileTree(client: SourcegraphClient, params: FileTreeParams
     const response = await client.query<FileTreeResponse>(FILE_TREE_QUERY, {
       repo,
       path: queryPath,
-      rev: rev ?? null,
+      rev: rev ?? 'HEAD',
     });
 
     if (!response.repository) {
