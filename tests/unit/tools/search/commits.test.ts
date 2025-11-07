@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { searchCommits } from '../../../../src/tools/search/commits.js';
+import { searchCommits } from '../../../../src/tools/search/search_commits.js';
 import type { SourcegraphClient } from '../../../../src/graphql/client.js';
 
 describe('searchCommits', () => {
@@ -154,6 +154,48 @@ describe('searchCommits', () => {
     expect(output).not.toContain('Body:');
     expect(output).not.toContain('Message Preview:');
     expect(output).not.toContain('Diff Preview:');
+  });
+
+  it('should normalize HTML markup in previews', async () => {
+    const mockClient = {
+      query: vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [
+              {
+                __typename: 'CommitSearchResult',
+                commit: {
+                  repository: { name: 'github.com/test/repo' },
+                  oid: 'abcdef1234567890',
+                  url: '/commit/abcdef1234567890',
+                  author: {
+                    person: { displayName: 'Formatter' },
+                    date: '2024-02-02T00:00:00Z',
+                  },
+                  subject: 'Normalize previews',
+                },
+                messagePreview: {
+                  value: 'Refactor <span class="match">auth</span> &lt; guard',
+                },
+                diffPreview: {
+                  value:
+                    'diff --git a/auth.ts b/auth.ts\n<span class="match">+export const ready = true;&lt;/span>\n',
+                },
+              },
+            ],
+            matchCount: 1,
+            limitHit: false,
+          },
+        },
+      }),
+    } as unknown as SourcegraphClient;
+
+    const output = await searchCommits(mockClient, { query: 'normalize previews' });
+
+    expect(output).toContain('Message Preview:');
+    expect(output).toContain('Refactor auth < guard');
+    expect(output).toContain('Diff Preview:');
+    expect(output).toContain('+export const ready = true;');
   });
 
   it('should ignore previews that only contain whitespace', async () => {

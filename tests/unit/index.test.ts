@@ -70,7 +70,7 @@ vi.mock('../../src/tools/search/symbols.js', () => ({
   searchSymbols: searchSymbolsMock,
 }));
 
-vi.mock('../../src/tools/search/commits.js', () => ({
+vi.mock('../../src/tools/search/search_commits.js', () => ({
   searchCommits: searchCommitsMock,
 }));
 

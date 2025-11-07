@@ -12,7 +12,7 @@ import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
 import { searchCode } from './tools/search/code.js';
 import { searchSymbols } from './tools/search/symbols.js';
-import { searchCommits } from './tools/search/commits.js';
+import { searchCommits } from './tools/search/search_commits.js';
 import { repoList } from './tools/repos/list.js';
 import { repoInfo } from './tools/repos/info.js';
 import { repoBranches } from './tools/repos/branches.js';

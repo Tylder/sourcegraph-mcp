@@ -59,12 +59,27 @@ const hasFilterValue = (value: string | undefined): value is string => {
   return typeof value === 'string' && value.trim().length > 0;
 };
 
+const decodeHtmlEntities = (value: string): string => {
+  return value
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&nbsp;/gi, ' ');
+};
+
+const stripHtmlTags = (value: string): string => {
+  return value.replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]+>/g, '');
+};
+
 const formatHighlightedValue = (highlight?: HighlightedString | null): string | null => {
   if (!highlight?.value) {
     return null;
   }
 
-  const trimmed = highlight.value.trim();
+  const normalized = decodeHtmlEntities(stripHtmlTags(highlight.value)).replace(/\u00a0/g, ' ');
+  const trimmed = normalized.trim();
   return trimmed.length > 0 ? trimmed : null;
 };
 
@@ -72,7 +87,7 @@ export async function searchCommits(
   client: SourcegraphClient,
   params: SearchCommitsParams
 ): Promise<string> {
-  const { query, author, after, before, limit = 10 } = params;
+  const { query, author, after, before, limit = 20 } = params;
 
   const filters: string[] = [];
 
