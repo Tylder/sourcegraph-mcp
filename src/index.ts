@@ -14,7 +14,7 @@ import { searchCode } from './tools/search/code.js';
 import { searchSymbols } from './tools/search/symbols.js';
 import { searchCommits } from './tools/search/commits.js';
 import { repoList } from './tools/repos/list.js';
-import { repoInfo } from './tools/repos/info.js';
+import { repoInfo, formatRepoInfo } from './tools/repos/repo_info.js';
 import { repoBranches } from './tools/repos/branches.js';
 import { fileTree } from './tools/files/tree.js';
 import { fileGet } from './tools/files/get.js';
@@ -218,16 +218,29 @@ server.tool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (args: any) => {
     const { name } = args as { name: string };
-    const result = await repoInfo(sgClient, { name });
+    try {
+      const info = await repoInfo(sgClient, { name });
+      const text = formatRepoInfo(info);
 
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: result,
-        },
-      ],
-    };
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text,
+          },
+        ],
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: message,
+          },
+        ],
+      };
+    }
   }
 );
 

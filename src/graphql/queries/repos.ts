@@ -44,6 +44,7 @@ export const REPO_INFO_QUERY = `
       isFork
       isArchived
       viewerCanAdminister
+      diskUsage
       mirrorInfo {
         cloned
         cloneInProgress

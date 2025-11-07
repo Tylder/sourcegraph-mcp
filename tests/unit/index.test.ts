@@ -8,7 +8,15 @@ const searchCodeMock = vi.fn().mockResolvedValue('code result');
 const searchSymbolsMock = vi.fn().mockResolvedValue('symbols result');
 const searchCommitsMock = vi.fn().mockResolvedValue('commits result');
 const repoListMock = vi.fn().mockResolvedValue('list result');
-const repoInfoMock = vi.fn().mockResolvedValue('info result');
+const repoInfoMock = vi.fn().mockResolvedValue({
+  name: 'repo',
+  description: 'desc',
+  url: 'url',
+  defaultBranch: 'main',
+  cloneStatus: { state: 'CLONED' },
+  stats: { isPrivate: false, isFork: false, isArchived: false },
+});
+const formatRepoInfoMock = vi.fn().mockReturnValue('formatted info');
 const repoBranchesMock = vi.fn().mockResolvedValue('branches result');
 const fileTreeMock = vi.fn().mockResolvedValue('tree result');
 const fileGetMock = vi.fn().mockResolvedValue('file get result');
@@ -78,8 +86,9 @@ vi.mock('../../src/tools/repos/list.js', () => ({
   repoList: repoListMock,
 }));
 
-vi.mock('../../src/tools/repos/info.js', () => ({
+vi.mock('../../src/tools/repos/repo_info.js', () => ({
   repoInfo: repoInfoMock,
+  formatRepoInfo: formatRepoInfoMock,
 }));
 
 vi.mock('../../src/tools/repos/branches.js', () => ({
@@ -109,6 +118,7 @@ describe('index entrypoint', () => {
     searchCommitsMock.mockClear();
     repoListMock.mockClear();
     repoInfoMock.mockClear();
+    formatRepoInfoMock.mockClear();
     repoBranchesMock.mockClear();
     fileTreeMock.mockClear();
     fileGetMock.mockClear();
@@ -173,6 +183,7 @@ describe('index entrypoint', () => {
 
     await toolHandlers.get('repo_info')?.({ name: 'name' });
     expect(repoInfoMock).toHaveBeenCalledWith(expect.anything(), { name: 'name' });
+    expect(formatRepoInfoMock).toHaveBeenCalled();
 
     await toolHandlers.get('repo_branches')?.({ repo: 'name', query: 'branch', limit: 6 });
     expect(repoBranchesMock).toHaveBeenCalledWith(expect.anything(), {
