@@ -12,6 +12,7 @@ import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
 import { searchCode } from './tools/search/code.js';
 import { searchSymbols } from './tools/search/symbols.js';
+import { repoBranches } from './tools/repos/branches.js';
 
 // Get and validate configuration
 const config = getConfig();
@@ -104,6 +105,43 @@ server.tool(
       limit?: number;
     };
     const result = await searchSymbols(sgClient, { query, types, limit });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: result,
+        },
+      ],
+    };
+  }
+);
+
+const repoBranchesSchema: Record<string, ZodTypeAny> = {
+  repo: z.string().describe('Full repository name (e.g., "github.com/sourcegraph/sourcegraph")'),
+  query: z.string().optional().describe('Optional branch name filter (e.g., "feature/")'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe('Maximum number of branches to return (default: 20)'),
+};
+
+server.tool(
+  'repo_branches',
+  'List branches in a repository with their latest commit identifiers',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  repoBranchesSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
+    const { repo, query, limit } = args as {
+      repo: string;
+      query?: string;
+      limit?: number;
+    };
+    const result = await repoBranches(sgClient, { repo, query, limit });
 
     return {
       content: [
