@@ -199,8 +199,37 @@ We enforce formatting and linting on staged TypeScript files via [lint-staged](h
 We maintain **100% test coverage**. See [AGENTS.md](./AGENTS.md) for testing philosophy and workflow.
 
 ```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
 npm run coverage
+
+# Run integration tests (requires SRC_ACCESS_TOKEN)
+npm run test:integration
 ```
+
+#### Integration Tests
+
+Integration tests verify the MCP server works against a real Sourcegraph instance. They require:
+
+1. **Access Token**: Set `SRC_ACCESS_TOKEN` in your `.env` file or environment
+   - Get one from: https://sourcegraph.com/user/settings/tokens (for Sourcegraph.com)
+   - Or your self-hosted instance: `https://your-instance/.../settings/tokens`
+
+2. **Environment Setup**:
+   ```bash
+   # Create .env file in project root
+   echo "SRC_ACCESS_TOKEN=your_token_here" > .env
+   echo "SRC_ENDPOINT=https://sourcegraph.com" >> .env
+   ```
+
+3. **Run Integration Tests**:
+   ```bash
+   npm run test:integration
+   ```
+
+If `SRC_ACCESS_TOKEN` is not set, integration tests will be skipped automatically.
 
 ## Architecture
 

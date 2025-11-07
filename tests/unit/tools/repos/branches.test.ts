@@ -214,4 +214,80 @@ describe('repoBranches', () => {
 
     expect(result).toContain('Branch 1: unknown');
   });
+
+  it('should handle single branch pagination', async () => {
+    const queryMock = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'repo',
+        url: 'url',
+        defaultBranch: { displayName: 'main' },
+        branches: {
+          nodes: [
+            {
+              displayName: 'single-branch',
+              target: { abbreviatedOID: '1234567' },
+            },
+          ],
+          pageInfo: { hasNextPage: false },
+        },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const result = await repoBranches(mockClient, { repo: 'repo', limit: 1 });
+
+    expect(result).toContain('Returned Branches: 1');
+    expect(result).toContain('Branch 1: single-branch');
+    expect(result).toContain('Target: 1234567');
+    expect(result).not.toContain('Additional branches available');
+  });
+
+  it('should handle maximum limit values', async () => {
+    const queryMock = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'repo',
+        url: 'url',
+        branches: {
+          nodes: Array.from({ length: 100 }, (_, i) => ({
+            displayName: `branch-${i.toString()}`,
+            target: { abbreviatedOID: `abc${i.toString()}`.padStart(7, '0') },
+          })),
+          pageInfo: { hasNextPage: false },
+        },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const result = await repoBranches(mockClient, { repo: 'repo', limit: 100 });
+
+    expect(result).toContain('Returned Branches: 100');
+    expect(result).toContain('Branch 1: branch-0');
+    expect(result).toContain('Branch 100: branch-99');
+  });
+
+  it('should handle branches with extremely long names', async () => {
+    const longBranchName = `feature/${'a'.repeat(200)}/very-long-branch-name`;
+
+    const queryMock = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'repo',
+        url: 'url',
+        branches: {
+          nodes: [
+            {
+              displayName: longBranchName,
+              target: { abbreviatedOID: 'abcdef1' },
+            },
+          ],
+          pageInfo: { hasNextPage: false },
+        },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const result = await repoBranches(mockClient, { repo: 'repo' });
+
+    expect(result).toContain(`Branch 1: ${longBranchName}`);
+    expect(result).toContain('Target: abcdef1');
+  });
 });

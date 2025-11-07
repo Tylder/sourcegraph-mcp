@@ -155,6 +155,9 @@ function tryParseJSON(text: string): unknown {
   }
 }
 
+// Load environment variables first
+await loadEnv();
+
 const hasSourcegraphCredentials =
   typeof process.env.SRC_ACCESS_TOKEN === 'string' && process.env.SRC_ACCESS_TOKEN.length > 0;
 
@@ -175,7 +178,6 @@ describeIntegration('Sourcegraph MCP Server Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    await loadEnv();
     client = new McpClient();
   }, 10000);
 

@@ -267,6 +267,73 @@ describe('fileGet', () => {
     expect(result).toBe('Error retrieving file: GraphQL error');
   });
 
+  it('should handle connection timeout errors', async () => {
+    const query = vi.fn().mockRejectedValue(new Error('Connection timeout'));
+    const mockClient = { query } as unknown as SourcegraphClient;
+
+    const result = await fileGet(mockClient, {
+      repo: 'github.com/test/repo',
+      path: 'src/index.ts',
+    });
+
+    expect(result).toBe('Error retrieving file: Connection timeout');
+  });
+
+  it('should handle permission denied errors', async () => {
+    const query = vi.fn().mockRejectedValue(new Error('Permission denied'));
+    const mockClient = { query } as unknown as SourcegraphClient;
+
+    const result = await fileGet(mockClient, {
+      repo: 'github.com/test/repo',
+      path: 'src/index.ts',
+    });
+
+    expect(result).toBe('Error retrieving file: Permission denied');
+  });
+
+  it('should handle completely malformed GraphQL responses', async () => {
+    const query = vi.fn().mockResolvedValue(null);
+    const mockClient = { query } as unknown as SourcegraphClient;
+
+    const result = await fileGet(mockClient, {
+      repo: 'github.com/test/repo',
+      path: 'src/index.ts',
+    });
+
+    expect(typeof result).toBe('string');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('should handle files with special characters in names', async () => {
+    const query = vi.fn().mockResolvedValue({
+      repository: {
+        name: 'github.com/test/repo',
+        url: '/github.com/test/repo',
+        commit: {
+          oid: 'abcdef',
+          blob: {
+            path: 'file with spaces & special-chars_(test).md',
+            content: 'Content with **markdown**',
+            byteSize: 24,
+            isBinary: false,
+            highlight: {
+              aborted: false,
+            },
+          },
+        },
+      },
+    });
+    const mockClient = { query } as unknown as SourcegraphClient;
+
+    const result = await fileGet(mockClient, {
+      repo: 'github.com/test/repo',
+      path: 'file with spaces & special-chars_(test).md',
+    });
+
+    expect(result).toContain('Path: file with spaces & special-chars_(test).md');
+    expect(result).toContain('Content with **markdown**');
+  });
+
   it('should pass variables to the query', async () => {
     const query = vi.fn().mockResolvedValue({
       repository: null,

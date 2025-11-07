@@ -69,7 +69,7 @@ jobs:
         run: npm run build
       
       - name: Integration tests
-        run: npm run test
-        env:
-          SRC_ENDPOINT: ${{ secrets.SRC_ENDPOINT }}
-          SRC_ACCESS_TOKEN: ${{ secrets.SRC_ACCESS_TOKEN }}
+      run: npm run test:integration
+      env:
+      SRC_ENDPOINT: ${{ secrets.SRC_ENDPOINT }}
+      SRC_ACCESS_TOKEN: ${{ secrets.SRC_ACCESS_TOKEN }}

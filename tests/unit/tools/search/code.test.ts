@@ -186,6 +186,108 @@ describe('searchCode', () => {
     expect(result).toContain('Error searching code: string error');
   });
 
+  it('should handle timeout errors gracefully', async () => {
+    const queryMock = vi.fn().mockRejectedValue(new Error('Request timeout'));
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const result = await searchCode(mockClient, { query: 'test' });
+
+    expect(result).toContain('Error searching code: Request timeout');
+  });
+
+  it('should handle rate limiting errors', async () => {
+    const queryMock = vi.fn().mockRejectedValue(new Error('Rate limit exceeded'));
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const result = await searchCode(mockClient, { query: 'test' });
+
+    expect(result).toContain('Error searching code: Rate limit exceeded');
+  });
+
+  it('should handle malformed GraphQL responses', async () => {
+    const queryMock = vi.fn().mockResolvedValue({ invalid: 'response' });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const result = await searchCode(mockClient, { query: 'test' });
+
+    // Should handle the malformed response gracefully
+    expect(typeof result).toBe('string');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('should handle null search results', async () => {
+    const queryMock = vi.fn().mockResolvedValue({
+      search: null,
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const result = await searchCode(mockClient, { query: 'test' });
+
+    expect(typeof result).toBe('string');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('should handle extremely long search queries', async () => {
+    const longQuery = `repo:github.com/test/repo ${'very '.repeat(100)}long search query with many terms`;
+
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [],
+          matchCount: 0,
+          limitHit: false,
+        },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const result = await searchCode(mockClient, { query: longQuery });
+
+    expect(result).toContain(`Search Query: ${longQuery}`);
+    expect(result).toContain('No results found');
+  });
+
+  it('should handle search queries with special characters and Unicode', async () => {
+    const unicodeQuery = 'repo:github.com/tëst/répôt function 世界 🌍 àáâãäå';
+
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [
+            {
+              __typename: 'FileMatch',
+              file: {
+                path: 'src/tëst.js',
+                url: '/repo/-/blob/src/tëst.js',
+              },
+              repository: {
+                name: 'github.com/tëst/répôt',
+                url: '/github.com/tëst/répôt',
+              },
+              lineMatches: [
+                {
+                  lineNumber: 42,
+                  offsetAndLengths: [[0, 10]],
+                  preview: 'function 世界() {',
+                },
+              ],
+            },
+          ],
+          matchCount: 1,
+          limitHit: false,
+        },
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+    const result = await searchCode(mockClient, { query: unicodeQuery });
+
+    expect(result).toContain(`Search Query: ${unicodeQuery}`);
+    expect(result).toContain('Repository: github.com/tëst/répôt');
+    expect(result).toContain('File: src/tëst.js');
+    expect(result).toContain('function 世界()');
+  });
+
   it('should handle results without lineMatches field', async () => {
     const queryMock = vi.fn().mockResolvedValue({
       search: {

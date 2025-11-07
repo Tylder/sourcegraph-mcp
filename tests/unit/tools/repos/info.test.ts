@@ -1,31 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import { repoInfo } from '../../../../src/tools/repos/info.js';
 import type { SourcegraphClient } from '../../../../src/graphql/client.js';
+import { createMockRepository, createMockClient } from '../../../test-utils.js';
 
 describe('repoInfo', () => {
   it('should format repository information correctly', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        repository: {
-          name: 'github.com/test/repo',
-          description: 'Test repository',
-          url: 'https://sourcegraph.com/github.com/test/repo',
-          isPrivate: false,
-          isFork: true,
-          isArchived: false,
-          viewerCanAdminister: true,
-          mirrorInfo: {
-            cloned: true,
-            cloneInProgress: false,
-            cloneProgress: null,
-          },
-          defaultBranch: {
-            displayName: 'main',
-          },
-          updatedAt: '2024-01-01T00:00:00Z',
-        },
-      }),
-    } as unknown as SourcegraphClient;
+    const mockRepository = createMockRepository({
+      isFork: true,
+    });
+    const mockClient = createMockClient({
+      repository: mockRepository,
+    });
 
     const result = await repoInfo(mockClient, { name: 'github.com/test/repo' });
 

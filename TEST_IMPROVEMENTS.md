@@ -1,0 +1,162 @@
+# Test Improvement Plan for Sourcegraph MCP Server
+
+This document outlines a comprehensive plan to improve the test suite for the Sourcegraph MCP Server project. The current test suite has 25 unit test files and 1 integration test file with 99.9% coverage.
+
+## Current Test Status
+- **Coverage**: 99.9% statements, 99.9% lines, 99.78% branches
+- **Test Files**: 26 total (25 unit, 1 integration)
+- **Passing Tests**: 211 unit tests, 9 skipped integration tests
+- **Framework**: Vitest with coverage reporting
+
+## Improvement Priorities
+
+### 1. Integration Test Activation ✅ COMPLETED
+**Current Issue**: The integration test (`mcp-server.integration.test.ts`) is skipped due to missing `SRC_ACCESS_TOKEN` environment variable.
+
+**Improvements Implemented**:
+- ✅ Fixed environment loading timing - moved `.env` file loading before credential check
+- ✅ Added comprehensive environment setup documentation in README.md
+- ✅ Fixed CI workflow to run `npm run test:integration` instead of `npm run test`
+- ✅ Verified integration tests now run successfully when SRC_ACCESS_TOKEN is available
+- Conditional test execution with clear messaging about required setup (already working)
+
+### 2. Error Handling Coverage ✅ COMPLETED
+**Current Issue**: Many tests only cover happy paths; error conditions are under-tested.
+
+**Improvements Implemented**:
+- ✅ Added comprehensive error testing for search_code tool (timeout, rate limiting, malformed responses, null results)
+- ✅ Enhanced repo_info tool error coverage (network timeouts, authentication failures, malformed data, missing fields)
+- ✅ Improved file_get tool error handling (connection timeouts, permission errors, completely malformed responses)
+- ✅ Verified error messages are user-friendly and consistent across all tested tools
+- ✅ Added tests for various GraphQL failure scenarios (rejections, malformed responses, null data)
+- ✅ Increased total test count from 220 to 231 tests (+11 error handling tests)
+
+### 3. Edge Case Coverage ✅ COMPLETED
+**Current Issue**: Some edge cases missing (empty results, null values, large datasets).
+
+**Improvements Implemented**:
+- ✅ Added Unicode character support tests for repository names, descriptions, and file paths
+- ✅ Enhanced pagination testing with single-item and maximum-size scenarios (100 branches)
+- ✅ Added tests for extremely long repository names and descriptions (200+ characters)
+- ✅ Improved file handling with special characters in filenames and paths
+- ✅ Verified binary file handling (already covered) and added large file content tests
+- ✅ Added tests for maximum input sizes and boundary conditions
+- ✅ Increased test coverage for edge cases across repo_info, file_get, repo_branches, and search_code tools
+
+### 4. Test Data Quality ✅ COMPLETED
+**Current Issue**: Mock data is functional but could be more comprehensive and realistic.
+
+**Improvements Implemented**:
+- ✅ Created shared test data factories in `tests/test-utils.ts` for consistent mock objects
+- ✅ Added factory functions for repositories, files, commits, branches, and search results
+- ✅ Implemented realistic mock data with proper defaults and override capabilities
+- ✅ Created validation helpers for consistent test assertions
+- ✅ Added mock client factory for simplified test setup
+- ✅ Demonstrated factory usage in repo_info tests with reduced code duplication
+
+### 5. Assertion Improvements
+**Current Issue**: Some tests use broad `toContain` assertions instead of exact matches.
+
+**Improvements**:
+- Replace broad `expect(result).toContain('substring')` with specific assertions
+- Add schema validation for response formats and data structures
+- Test exact output formatting, ordering, and presentation
+- Add performance assertions for response times and memory usage
+- Implement snapshot testing for complex output structures
+
+### 6. Test Organization
+**Current Issue**: Some test files have repetitive patterns that could be parameterized.
+
+**Improvements**:
+- Use `test.each` or `describe.each` for repetitive test patterns
+- Group related tests into nested describe blocks with clear hierarchies
+- Create shared test utilities and helper functions to reduce duplication
+- Add test categories (unit, integration, e2e) with consistent naming conventions
+- Implement test fixtures and setup/teardown patterns
+
+### 7. Mock Enhancement
+**Current Issue**: Mocks are functional but could be more sophisticated and verifiable.
+
+**Improvements**:
+- Add mock verification to ensure correct GraphQL queries are executed
+- Create reusable mock builders for common scenarios and edge cases
+- Add mock state management for complex multi-step test scenarios
+- Implement mock delays and network simulation for timeout testing
+- Add mock validation to prevent test data drift
+
+### 8. Documentation
+**Current Issue**: Test files lack documentation about their purpose and assumptions.
+
+**Improvements**:
+- Add JSDoc comments explaining test purposes and scenarios
+- Document test data assumptions and expected behaviors
+- Create test README with setup instructions and troubleshooting
+- Add inline comments for complex test logic and assertions
+- Document test dependencies and environment requirements
+
+### 9. CI/CD Integration
+**Current Issue**: Test quality assurance could be stronger in automated pipelines.
+
+**Improvements**:
+- Add coverage thresholds enforcement in CI pipelines
+- Implement test result reporting and historical trending analysis
+- Add mutation testing for critical paths and error handling
+- Create test performance monitoring and regression detection
+- Implement parallel test execution for faster feedback
+
+### 10. Accessibility & Security Testing
+**Current Issue**: No tests for security edge cases or data sanitization.
+
+**Improvements**:
+- Add tests for input sanitization and injection prevention
+- Test with malformed GraphQL queries and malicious inputs
+- Add tests for proper error message sanitization and data leakage prevention
+- Verify authentication and authorization boundaries
+- Test rate limiting and abuse prevention mechanisms
+
+## Implementation Strategy
+
+### Phase 1: Foundation (Week 1-2)
+1. Fix integration test setup and environment configuration
+2. Add basic error handling tests for all tools
+3. Improve test data quality with shared factories
+
+### Phase 2: Coverage (Week 3-4)
+1. Add comprehensive edge case coverage
+2. Enhance assertion specificity and validation
+3. Implement systematic error scenario testing
+
+### Phase 3: Organization (Week 5-6)
+1. Refactor test organization with parameterization
+2. Add shared utilities and reduce duplication
+3. Improve mock sophistication and verification
+
+### Phase 4: Advanced Features (Week 7-8)
+1. Implement CI/CD improvements and monitoring
+2. Add security and accessibility testing
+3. Create comprehensive documentation
+
+## Success Metrics
+- Achieve 100% code coverage (statements, branches, functions, lines)
+- Zero flaky tests in CI pipeline
+- Integration tests running successfully in CI
+- Test execution time under 30 seconds
+- All tests passing consistently across environments
+
+## Risk Mitigation
+- Implement changes incrementally to avoid breaking existing tests
+- Maintain backward compatibility with current test structure
+- Add comprehensive test validation before merging improvements
+- Monitor test performance and coverage metrics continuously
+
+## Dependencies
+- Access to test Sourcegraph instance or mock server
+- Environment setup for integration testing
+- CI/CD pipeline modifications for enhanced testing
+- Team agreement on testing standards and conventions
+
+## Next Steps
+1. Review and approve this improvement plan
+2. Set up integration test environment
+3. Begin implementation with Phase 1 improvements
+4. Track progress and adjust plan as needed
