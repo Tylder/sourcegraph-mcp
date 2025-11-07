@@ -37,7 +37,7 @@ export interface FileTreeParams {
 }
 
 function normalizeTreePath(path: string | undefined): { queryPath: string; displayPath: string } {
-  if (!path) {
+  if (typeof path !== 'string' || path.length === 0) {
     return { queryPath: '', displayPath: '/' };
   }
 
@@ -67,17 +67,17 @@ export async function fileTree(client: SourcegraphClient, params: FileTreeParams
       rev: rev ?? 'HEAD',
     });
 
-    if (!response.repository) {
+    if (response.repository === null) {
       return `Repository not found: ${repo}`;
     }
 
-    if (!response.repository.commit) {
+    if (response.repository.commit === null) {
       const revision = rev ?? 'HEAD';
       return `Revision not found: ${revision}`;
     }
 
     const { tree } = response.repository.commit;
-    if (!tree) {
+    if (tree === null) {
       return `Path not found: ${displayPath}`;
     }
 
@@ -98,7 +98,7 @@ export async function fileTree(client: SourcegraphClient, params: FileTreeParams
       const entryNumber = (index + 1).toString();
       let typeLabel = 'File';
 
-      if (entry.submodule) {
+      if (entry.submodule != null) {
         typeLabel = 'Submodule';
       } else if (entry.isDirectory) {
         typeLabel = 'Directory';
@@ -111,7 +111,7 @@ export async function fileTree(client: SourcegraphClient, params: FileTreeParams
         output += '   Note: Single child directory\n';
       }
 
-      if (entry.submodule) {
+      if (entry.submodule != null) {
         output += `   Submodule URL: ${entry.submodule.url}\n`;
       }
 

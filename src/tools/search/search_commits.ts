@@ -74,7 +74,7 @@ const stripHtmlTags = (value: string): string => {
 };
 
 const formatHighlightedValue = (highlight?: HighlightedString | null): string | null => {
-  if (!highlight?.value) {
+  if (highlight == null || typeof highlight.value !== 'string') {
     return null;
   }
 
@@ -140,17 +140,29 @@ export async function searchCommits(
     let displayedResults = 0;
 
     results.results.forEach((result) => {
-      if (result.__typename !== 'CommitSearchResult' || !result.commit) {
+      if (result.__typename !== 'CommitSearchResult' || result.commit == null) {
         return;
       }
 
       const { commit } = result;
       const repository = commit.repository?.name ?? 'Unknown repository';
       const commitId = commit.abbreviatedOID ?? commit.oid;
+      const authorDisplayName = commit.author?.person?.displayName?.trim();
+      const authorEmail = commit.author?.person?.email?.trim();
       const authorName =
-        commit.author?.person?.displayName ?? commit.author?.person?.email ?? 'Unknown author';
-      const authorDate = commit.author?.date ?? 'Unknown date';
-      const subject = commit.subject ?? '(no subject)';
+        (typeof authorDisplayName === 'string' && authorDisplayName.length > 0
+          ? authorDisplayName
+          : typeof authorEmail === 'string' && authorEmail.length > 0
+            ? authorEmail
+            : undefined) ?? 'Unknown author';
+      const authorDateValue = commit.author?.date?.trim();
+      const authorDate =
+        typeof authorDateValue === 'string' && authorDateValue.length > 0
+          ? authorDateValue
+          : 'Unknown date';
+      const subjectValue = commit.subject?.trim();
+      const subject =
+        typeof subjectValue === 'string' && subjectValue.length > 0 ? subjectValue : '(no subject)';
 
       displayedResults += 1;
       output.push(`Result ${displayedResults.toString()}:`);
@@ -162,19 +174,19 @@ export async function searchCommits(
       output.push(`Subject: ${subject}`);
 
       const body = commit.body?.trim();
-      if (body) {
+      if (typeof body === 'string' && body.length > 0) {
         output.push('Body:');
         output.push(body);
       }
 
       const messagePreview = formatHighlightedValue(result.messagePreview);
-      if (messagePreview) {
+      if (typeof messagePreview === 'string' && messagePreview.length > 0) {
         output.push('Message Preview:');
         output.push(messagePreview);
       }
 
       const diffPreview = formatHighlightedValue(result.diffPreview);
-      if (diffPreview) {
+      if (typeof diffPreview === 'string' && diffPreview.length > 0) {
         output.push('Diff Preview:');
         output.push(diffPreview);
       }

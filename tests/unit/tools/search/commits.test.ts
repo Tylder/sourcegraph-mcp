@@ -4,45 +4,44 @@ import type { SourcegraphClient } from '../../../../src/graphql/client.js';
 
 describe('searchCommits', () => {
   it('should format commit search results correctly', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [
-              {
-                __typename: 'CommitSearchResult',
-                commit: {
-                  repository: {
-                    name: 'github.com/test/repo',
-                    url: '/github.com/test/repo',
-                  },
-                  oid: 'abcdef1234567890',
-                  abbreviatedOID: 'abcdef1',
-                  url: '/github.com/test/repo/-/commit/abcdef1234567890',
-                  subject: 'Fix authentication bug',
-                  body: 'Ensure tokens are validated correctly',
-                  author: {
-                    person: {
-                      displayName: 'Jane Doe',
-                      email: 'jane@example.com',
-                    },
-                    date: '2024-03-01T12:00:00Z',
-                  },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [
+            {
+              __typename: 'CommitSearchResult',
+              commit: {
+                repository: {
+                  name: 'github.com/test/repo',
+                  url: '/github.com/test/repo',
                 },
-                messagePreview: {
-                  value: 'Fix authentication bug',
-                },
-                diffPreview: {
-                  value: '+ return validateToken(token);',
+                oid: 'abcdef1234567890',
+                abbreviatedOID: 'abcdef1',
+                url: '/github.com/test/repo/-/commit/abcdef1234567890',
+                subject: 'Fix authentication bug',
+                body: 'Ensure tokens are validated correctly',
+                author: {
+                  person: {
+                    displayName: 'Jane Doe',
+                    email: 'jane@example.com',
+                  },
+                  date: '2024-03-01T12:00:00Z',
                 },
               },
-            ],
-            matchCount: 1,
-            limitHit: false,
-          },
+              messagePreview: {
+                value: 'Fix authentication bug',
+              },
+              diffPreview: {
+                value: '+ return validateToken(token);',
+              },
+            },
+          ],
+          matchCount: 1,
+          limitHit: false,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'auth bug' });
 
@@ -59,17 +58,16 @@ describe('searchCommits', () => {
   });
 
   it('should apply filters and limit to the query', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [],
-            matchCount: 0,
-            limitHit: false,
-          },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [],
+          matchCount: 0,
+          limitHit: false,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await searchCommits(mockClient, {
       query: 'fix bug',
@@ -79,7 +77,7 @@ describe('searchCommits', () => {
       limit: 5,
     });
 
-    expect(mockClient.query).toHaveBeenCalledWith(
+    expect(queryMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         query: 'type:commit fix bug author:"John Smith" after:2024-01-01 before:2024-02-01 count:5',
@@ -88,17 +86,16 @@ describe('searchCommits', () => {
   });
 
   it('should handle filters with whitespace-only values', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [],
-            matchCount: 0,
-            limitHit: false,
-          },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [],
+          matchCount: 0,
+          limitHit: false,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await searchCommits(mockClient, {
       query: 'fix',
@@ -106,7 +103,7 @@ describe('searchCommits', () => {
       limit: 1,
     });
 
-    expect(mockClient.query).toHaveBeenCalledWith(
+    expect(queryMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         query: 'type:commit fix count:1',
@@ -115,34 +112,33 @@ describe('searchCommits', () => {
   });
 
   it('should handle results with missing optional fields', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [
-              {
-                __typename: 'CommitSearchResult',
-                commit: {
-                  repository: {
-                    name: 'github.com/test/repo',
-                    url: '/github.com/test/repo',
-                  },
-                  oid: '1234567890abcdef',
-                  url: '/github.com/test/repo/-/commit/1234567890abcdef',
-                  author: {
-                    person: {
-                      email: 'dev@example.com',
-                    },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [
+            {
+              __typename: 'CommitSearchResult',
+              commit: {
+                repository: {
+                  name: 'github.com/test/repo',
+                  url: '/github.com/test/repo',
+                },
+                oid: '1234567890abcdef',
+                url: '/github.com/test/repo/-/commit/1234567890abcdef',
+                author: {
+                  person: {
+                    email: 'dev@example.com',
                   },
                 },
               },
-            ],
-            matchCount: 1,
-            limitHit: false,
-          },
+            },
+          ],
+          matchCount: 1,
+          limitHit: false,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'refactor' });
 
@@ -157,38 +153,37 @@ describe('searchCommits', () => {
   });
 
   it('should normalize HTML markup in previews', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [
-              {
-                __typename: 'CommitSearchResult',
-                commit: {
-                  repository: { name: 'github.com/test/repo' },
-                  oid: 'abcdef1234567890',
-                  url: '/commit/abcdef1234567890',
-                  author: {
-                    person: { displayName: 'Formatter' },
-                    date: '2024-02-02T00:00:00Z',
-                  },
-                  subject: 'Normalize previews',
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [
+            {
+              __typename: 'CommitSearchResult',
+              commit: {
+                repository: { name: 'github.com/test/repo' },
+                oid: 'abcdef1234567890',
+                url: '/commit/abcdef1234567890',
+                author: {
+                  person: { displayName: 'Formatter' },
+                  date: '2024-02-02T00:00:00Z',
                 },
-                messagePreview: {
-                  value: 'Refactor <span class="match">auth</span> &lt; guard',
-                },
-                diffPreview: {
-                  value:
-                    'diff --git a/auth.ts b/auth.ts\n<span class="match">+export const ready = true;&lt;/span>\n',
-                },
+                subject: 'Normalize previews',
               },
-            ],
-            matchCount: 1,
-            limitHit: false,
-          },
+              messagePreview: {
+                value: 'Refactor <span class="match">auth</span> &lt; guard',
+              },
+              diffPreview: {
+                value:
+                  'diff --git a/auth.ts b/auth.ts\n<span class="match">+export const ready = true;&lt;/span>\n',
+              },
+            },
+          ],
+          matchCount: 1,
+          limitHit: false,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'normalize previews' });
 
@@ -199,33 +194,32 @@ describe('searchCommits', () => {
   });
 
   it('should ignore previews that only contain whitespace', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [
-              {
-                __typename: 'CommitSearchResult',
-                commit: {
-                  repository: { name: 'github.com/test/repo' },
-                  oid: 'abcdef',
-                  url: '/commit/abcdef',
-                  author: {
-                    person: { displayName: 'Tester' },
-                    date: '2024-01-01T00:00:00Z',
-                  },
-                  subject: 'Whitespace previews',
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [
+            {
+              __typename: 'CommitSearchResult',
+              commit: {
+                repository: { name: 'github.com/test/repo' },
+                oid: 'abcdef',
+                url: '/commit/abcdef',
+                author: {
+                  person: { displayName: 'Tester' },
+                  date: '2024-01-01T00:00:00Z',
                 },
-                messagePreview: { value: '   ' },
-                diffPreview: { value: '\n\n' },
+                subject: 'Whitespace previews',
               },
-            ],
-            matchCount: 1,
-            limitHit: false,
-          },
+              messagePreview: { value: '   ' },
+              diffPreview: { value: '\n\n' },
+            },
+          ],
+          matchCount: 1,
+          limitHit: false,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'test' });
 
@@ -234,32 +228,31 @@ describe('searchCommits', () => {
   });
 
   it('should skip non-commit results and keep numbering sequential', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [
-              { __typename: 'FileMatch' },
-              {
-                __typename: 'CommitSearchResult',
-                commit: {
-                  repository: { name: 'github.com/test/repo' },
-                  oid: 'abcdef',
-                  url: '/commit/abcdef',
-                  author: {
-                    person: { displayName: 'Tester' },
-                    date: '2024-01-01T00:00:00Z',
-                  },
-                  subject: 'Initial commit',
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [
+            { __typename: 'FileMatch' },
+            {
+              __typename: 'CommitSearchResult',
+              commit: {
+                repository: { name: 'github.com/test/repo' },
+                oid: 'abcdef',
+                url: '/commit/abcdef',
+                author: {
+                  person: { displayName: 'Tester' },
+                  date: '2024-01-01T00:00:00Z',
                 },
+                subject: 'Initial commit',
               },
-            ],
-            matchCount: 2,
-            limitHit: false,
-          },
+            },
+          ],
+          matchCount: 2,
+          limitHit: false,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'test' });
 
@@ -269,25 +262,24 @@ describe('searchCommits', () => {
   });
 
   it('should handle missing repository and author details gracefully', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [
-              {
-                __typename: 'CommitSearchResult',
-                commit: {
-                  oid: 'deadbeef',
-                  url: '/commit/deadbeef',
-                },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [
+            {
+              __typename: 'CommitSearchResult',
+              commit: {
+                oid: 'deadbeef',
+                url: '/commit/deadbeef',
               },
-            ],
-            matchCount: 1,
-            limitHit: false,
-          },
+            },
+          ],
+          matchCount: 1,
+          limitHit: false,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'test' });
 
@@ -296,17 +288,16 @@ describe('searchCommits', () => {
   });
 
   it('should note when result limit is hit', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [],
-            matchCount: 50,
-            limitHit: true,
-          },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [],
+          matchCount: 50,
+          limitHit: true,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'fix', limit: 10 });
 
@@ -314,17 +305,16 @@ describe('searchCommits', () => {
   });
 
   it('should show message when no commits found', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            results: [],
-            matchCount: 0,
-            limitHit: false,
-          },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          results: [],
+          matchCount: 0,
+          limitHit: false,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'no matches' });
 
@@ -332,9 +322,8 @@ describe('searchCommits', () => {
   });
 
   it('should handle query errors gracefully', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue(new Error('GraphQL failure')),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockRejectedValue(new Error('GraphQL failure'));
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'test' });
 
@@ -342,9 +331,8 @@ describe('searchCommits', () => {
   });
 
   it('should handle non-Error rejections', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue('string error'),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockRejectedValue('string error');
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const output = await searchCommits(mockClient, { query: 'test' });
 

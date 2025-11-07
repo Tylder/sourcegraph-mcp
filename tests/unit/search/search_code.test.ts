@@ -4,75 +4,74 @@ import type { SourcegraphClient } from '../../../src/graphql/client.js';
 
 describe('searchCode', () => {
   it('returns structured search results for multiple match types', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            matchCount: 3,
-            approximateResultCount: '3',
-            limitHit: false,
-            dynamicFilters: [
-              {
-                value: 'lang:typescript',
-                label: 'Language: TypeScript',
-                count: 2,
-                kind: 'LANGUAGE',
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          matchCount: 3,
+          approximateResultCount: '3',
+          limitHit: false,
+          dynamicFilters: [
+            {
+              value: 'lang:typescript',
+              label: 'Language: TypeScript',
+              count: 2,
+              kind: 'LANGUAGE',
+            },
+          ],
+          results: [
+            {
+              __typename: 'FileMatch',
+              repository: {
+                name: 'github.com/sourcegraph/example',
+                url: 'https://example.com/repo',
               },
-            ],
-            results: [
-              {
-                __typename: 'FileMatch',
+              file: {
+                path: 'src/index.ts',
+                url: 'https://example.com/repo/-/blob/src/index.ts',
+              },
+              lineMatches: [
+                {
+                  lineNumber: 42,
+                  offsetAndLengths: [[1, 6]],
+                  preview: 'function example() { return true; }',
+                },
+              ],
+            },
+            {
+              __typename: 'Repository',
+              name: 'github.com/sourcegraph/another',
+              url: 'https://example.com/another',
+              description: 'Second repository',
+            },
+            {
+              __typename: 'CommitSearchResult',
+              commit: {
                 repository: {
                   name: 'github.com/sourcegraph/example',
                   url: 'https://example.com/repo',
                 },
-                file: {
-                  path: 'src/index.ts',
-                  url: 'https://example.com/repo/-/blob/src/index.ts',
-                },
-                lineMatches: [
-                  {
-                    lineNumber: 42,
-                    offsetAndLengths: [[1, 6]],
-                    preview: 'function example() { return true; }',
-                  },
-                ],
+                oid: '1234567890abcdef',
+                abbreviatedOID: '1234567',
+                url: 'https://example.com/commit/1234567',
+                subject: 'Fix bug',
               },
-              {
-                __typename: 'Repository',
-                name: 'github.com/sourcegraph/another',
-                url: 'https://example.com/another',
-                description: 'Second repository',
-              },
-              {
-                __typename: 'CommitSearchResult',
-                commit: {
-                  repository: {
-                    name: 'github.com/sourcegraph/example',
-                    url: 'https://example.com/repo',
-                  },
-                  oid: '1234567890abcdef',
-                  abbreviatedOID: '1234567',
-                  url: 'https://example.com/commit/1234567',
-                  subject: 'Fix bug',
-                },
-                messagePreview: { value: 'Fix bug in example()' },
-              },
-              { __typename: 'DiffSearchResult' },
-            ],
-            cloning: [{ name: 'github.com/sourcegraph/slow-repo' }],
-            timedout: [{ name: 'github.com/sourcegraph/timeout-repo' }],
-            missing: [
-              {
-                name: 'github.com/sourcegraph/missing-repo',
-                reason: 'CLONING',
-                url: 'https://example.com/missing',
-              },
-            ],
-          },
+              messagePreview: { value: 'Fix bug in example()' },
+            },
+            { __typename: 'DiffSearchResult' },
+          ],
+          cloning: [{ name: 'github.com/sourcegraph/slow-repo' }],
+          timedout: [{ name: 'github.com/sourcegraph/timeout-repo' }],
+          missing: [
+            {
+              name: 'github.com/sourcegraph/missing-repo',
+              reason: 'CLONING',
+              url: 'https://example.com/missing',
+            },
+          ],
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await searchCode(mockClient, {
       query: 'repo:sourcegraph/example example',
@@ -81,11 +80,11 @@ describe('searchCode', () => {
       version: 'V3',
     });
 
-    expect(mockClient.query).toHaveBeenCalledWith(expect.any(String), {
+    expect(queryMock).toHaveBeenCalledWith(expect.any(String), {
       query: expect.stringContaining('count:5'),
       version: 'V3',
     });
-    expect(mockClient.query).toHaveBeenCalledWith(expect.any(String), {
+    expect(queryMock).toHaveBeenCalledWith(expect.any(String), {
       query: expect.stringContaining('timeout:5s'),
       version: 'V3',
     });
@@ -158,22 +157,21 @@ describe('searchCode', () => {
   });
 
   it('normalises query and limit values before executing search', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            matchCount: 0,
-            approximateResultCount: '0',
-            limitHit: false,
-            dynamicFilters: [],
-            results: [],
-            cloning: [],
-            timedout: [],
-            missing: [],
-          },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          matchCount: 0,
+          approximateResultCount: '0',
+          limitHit: false,
+          dynamicFilters: [],
+          results: [],
+          cloning: [],
+          timedout: [],
+          missing: [],
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await searchCode(mockClient, {
       query: '   test   ',
@@ -187,22 +185,21 @@ describe('searchCode', () => {
   });
 
   it('clamps invalid limit values to safe defaults', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            matchCount: 0,
-            approximateResultCount: '0',
-            limitHit: false,
-            dynamicFilters: [],
-            results: [],
-            cloning: [],
-            timedout: [],
-            missing: [],
-          },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          matchCount: 0,
+          approximateResultCount: '0',
+          limitHit: false,
+          dynamicFilters: [],
+          results: [],
+          cloning: [],
+          timedout: [],
+          missing: [],
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const nanLimit = await searchCode(mockClient, { query: 'test', limit: Number.NaN });
     expect(nanLimit.limit).toBe(10);
@@ -212,90 +209,88 @@ describe('searchCode', () => {
   });
 
   it('respects existing filters and formats timeout values appropriately', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            matchCount: 0,
-            approximateResultCount: '0',
-            limitHit: false,
-            dynamicFilters: [],
-            results: [],
-            cloning: [],
-            timedout: [],
-            missing: [],
-          },
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          matchCount: 0,
+          approximateResultCount: '0',
+          limitHit: false,
+          dynamicFilters: [],
+          results: [],
+          cloning: [],
+          timedout: [],
+          missing: [],
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await searchCode(mockClient, {
       query: 'timeout:2s count:20 foo',
       limit: 50,
       timeout: 1500,
     });
-    expect(mockClient.query).toHaveBeenNthCalledWith(1, expect.any(String), {
+    expect(queryMock).toHaveBeenNthCalledWith(1, expect.any(String), {
       query: 'timeout:2s count:20 foo',
       version: 'V3',
     });
 
     await searchCode(mockClient, { query: 'repo:example', timeout: 1500 });
-    expect(mockClient.query).toHaveBeenNthCalledWith(2, expect.any(String), {
+    expect(queryMock).toHaveBeenNthCalledWith(2, expect.any(String), {
       query: 'repo:example count:10 timeout:1500ms',
       version: 'V3',
     });
 
     await searchCode(mockClient, { query: 'repo:example', timeout: 0.4 });
-    expect(mockClient.query).toHaveBeenNthCalledWith(3, expect.any(String), {
+    expect(queryMock).toHaveBeenNthCalledWith(3, expect.any(String), {
       query: 'repo:example count:10',
       version: 'V3',
     });
   });
 
   it('omits incomplete match entries and normalises missing metadata', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            matchCount: 2,
-            approximateResultCount: '2',
-            limitHit: false,
-            dynamicFilters: undefined,
-            results: [
-              {
-                __typename: 'FileMatch',
-                repository: null,
-                file: { path: 'src/index.ts', url: 'https://example.com/blob' },
-                lineMatches: [],
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          matchCount: 2,
+          approximateResultCount: '2',
+          limitHit: false,
+          dynamicFilters: undefined,
+          results: [
+            {
+              __typename: 'FileMatch',
+              repository: null,
+              file: { path: 'src/index.ts', url: 'https://example.com/blob' },
+              lineMatches: [],
+            },
+            {
+              __typename: 'FileMatch',
+              repository: {
+                name: 'github.com/sourcegraph/example',
+                url: 'https://example.com/repo',
               },
-              {
-                __typename: 'FileMatch',
-                repository: {
-                  name: 'github.com/sourcegraph/example',
-                  url: 'https://example.com/repo',
-                },
-                file: { path: 'src/index.ts', url: 'https://example.com/blob' },
-                lineMatches: [],
-              },
-              {
-                __typename: 'Repository',
-                name: 'github.com/sourcegraph/empty',
-                url: 'https://example.com/empty',
-                description: null,
-              },
-              {
-                __typename: 'CommitSearchResult',
-                commit: null,
-                messagePreview: { value: 'orphan preview' },
-              },
-            ],
-            cloning: undefined,
-            timedout: undefined,
-            missing: undefined,
-          },
+              file: { path: 'src/index.ts', url: 'https://example.com/blob' },
+              lineMatches: [],
+            },
+            {
+              __typename: 'Repository',
+              name: 'github.com/sourcegraph/empty',
+              url: 'https://example.com/empty',
+              description: null,
+            },
+            {
+              __typename: 'CommitSearchResult',
+              commit: null,
+              messagePreview: { value: 'orphan preview' },
+            },
+          ],
+          cloning: undefined,
+          timedout: undefined,
+          missing: undefined,
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await searchCode(mockClient, { query: 'repo:example file.ts' });
 
@@ -321,55 +316,54 @@ describe('searchCode', () => {
   });
 
   it('normalises optional nested fields on match records', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
-        search: {
-          results: {
-            matchCount: 1,
-            approximateResultCount: '1',
-            limitHit: false,
-            dynamicFilters: [],
-            results: [
-              {
-                __typename: 'FileMatch',
-                repository: {
-                  name: 'github.com/sourcegraph/example',
-                  url: 'https://example.com/repo',
+    const queryMock = vi.fn().mockResolvedValue({
+      search: {
+        results: {
+          matchCount: 1,
+          approximateResultCount: '1',
+          limitHit: false,
+          dynamicFilters: [],
+          results: [
+            {
+              __typename: 'FileMatch',
+              repository: {
+                name: 'github.com/sourcegraph/example',
+                url: 'https://example.com/repo',
+              },
+              file: { path: 'src/index.ts', url: 'https://example.com/blob' },
+              lineMatches: [
+                {
+                  lineNumber: 1,
+                  offsetAndLengths: undefined,
+                  preview: null,
                 },
-                file: { path: 'src/index.ts', url: 'https://example.com/blob' },
-                lineMatches: [
-                  {
-                    lineNumber: 1,
-                    offsetAndLengths: undefined,
-                    preview: null,
-                  },
-                ],
+              ],
+            },
+            {
+              __typename: 'CommitSearchResult',
+              commit: {
+                repository: null,
+                oid: 'abcdef1234567890',
+                abbreviatedOID: null,
+                url: 'https://example.com/commit',
+                subject: null,
               },
-              {
-                __typename: 'CommitSearchResult',
-                commit: {
-                  repository: null,
-                  oid: 'abcdef1234567890',
-                  abbreviatedOID: null,
-                  url: 'https://example.com/commit',
-                  subject: null,
-                },
-                messagePreview: { value: null },
-              },
-            ],
-            cloning: [],
-            timedout: [],
-            missing: [
-              {
-                name: 'github.com/sourcegraph/missing',
-                reason: null,
-                url: null,
-              },
-            ],
-          },
+              messagePreview: { value: null },
+            },
+          ],
+          cloning: [],
+          timedout: [],
+          missing: [
+            {
+              name: 'github.com/sourcegraph/missing',
+              reason: null,
+              url: null,
+            },
+          ],
         },
-      }),
-    } as unknown as SourcegraphClient;
+      },
+    });
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     const result = await searchCode(mockClient, { query: 'repo:example file.ts' });
 
@@ -405,9 +399,8 @@ describe('searchCode', () => {
   });
 
   it('throws a descriptive error when the GraphQL request fails', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue(new Error('GraphQL query failed: boom')),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockRejectedValue(new Error('GraphQL query failed: boom'));
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await expect(searchCode(mockClient, { query: 'test' })).rejects.toThrow(
       'Code search failed: GraphQL query failed: boom',
@@ -415,9 +408,8 @@ describe('searchCode', () => {
   });
 
   it('wraps non-Error throwables when the GraphQL client fails', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue('boom'),
-    } as unknown as SourcegraphClient;
+    const queryMock = vi.fn().mockRejectedValue('boom');
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await expect(searchCode(mockClient, { query: 'test' })).rejects.toThrow(
       'Code search failed: boom',
@@ -425,7 +417,8 @@ describe('searchCode', () => {
   });
 
   it('throws when the search query is empty', async () => {
-    const mockClient = { query: vi.fn() } as unknown as SourcegraphClient;
+    const queryMock = vi.fn();
+    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
     await expect(searchCode(mockClient, { query: '   ' })).rejects.toThrow(
       'Search query must not be empty.',

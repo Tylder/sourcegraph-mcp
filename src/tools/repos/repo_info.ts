@@ -57,7 +57,7 @@ export interface RepoInfoResult {
 }
 
 function deriveCloneStatus(mirrorInfo: MirrorInfo): RepoCloneStatus {
-  if (!mirrorInfo) {
+  if (mirrorInfo === null || mirrorInfo === undefined) {
     return { state: 'UNKNOWN' };
   }
 
@@ -69,7 +69,7 @@ function deriveCloneStatus(mirrorInfo: MirrorInfo): RepoCloneStatus {
     const progress = mirrorInfo.cloneProgress?.trim();
     return {
       state: 'CLONING',
-      progress: progress && progress.length > 0 ? progress : undefined,
+      progress: typeof progress === 'string' && progress.length > 0 ? progress : undefined,
     };
   }
 
@@ -77,7 +77,7 @@ function deriveCloneStatus(mirrorInfo: MirrorInfo): RepoCloneStatus {
 }
 
 function normalizeDescription(description: string | null | undefined): string | null {
-  if (!description) {
+  if (description === null || description === undefined) {
     return null;
   }
 
@@ -91,10 +91,12 @@ function formatCloneStatus(status: RepoCloneStatus): string {
       return 'Cloned';
     case 'CLONING': {
       const progress = status.progress?.trim();
-      return `Cloning (${progress && progress.length > 0 ? progress : 'in progress'})`;
+      return `Cloning (${typeof progress === 'string' && progress.length > 0 ? progress : 'in progress'})`;
     }
     case 'NOT_CLONED':
       return 'Not cloned';
+    case 'UNKNOWN':
+      return 'Unknown';
     default:
       return 'Unknown';
   }
@@ -122,7 +124,7 @@ export function formatRepoInfo(result: RepoInfoResult): string {
     statsDetails.push(`Disk Usage: ${result.stats.diskUsage.toString()} KB`);
   }
 
-  if (result.stats.updatedAt) {
+  if (typeof result.stats.updatedAt === 'string' && result.stats.updatedAt.length > 0) {
     statsDetails.push(`Last Updated: ${result.stats.updatedAt}`);
   }
 
@@ -151,7 +153,7 @@ export async function repoInfo(
     throw new Error(`Error fetching repository info: ${message}`);
   }
 
-  if (!response.repository) {
+  if (response.repository === null) {
     throw new Error(`Repository not found: ${params.name}`);
   }
 

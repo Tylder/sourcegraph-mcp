@@ -150,7 +150,7 @@ const normalizeTypeFilters = (
       SYMBOL_KIND_ALIASES[lookupKey] ??
       (KNOWN_SYMBOL_KINDS.has(trimmed.toUpperCase()) ? trimmed.toUpperCase() : undefined);
 
-    if (canonical) {
+    if (typeof canonical === 'string') {
       accepted.add(canonical);
     } else {
       ignored.push(trimmed);
@@ -185,7 +185,7 @@ const buildSearchQuery = (
   }
 
   const typeFilter = buildTypeFilter([...acceptedTypes]);
-  if (typeFilter) {
+  if (typeof typeFilter === 'string' && typeFilter.length > 0) {
     segments.push(typeFilter);
   }
 
@@ -214,18 +214,18 @@ const formatSymbolResult = (
 
   lines.push(`Language: ${symbol.language}`);
 
-  if (symbol.containerName) {
+  if (typeof symbol.containerName === 'string' && symbol.containerName.length > 0) {
     lines.push(`Container: ${symbol.containerName}`);
   }
 
   const { location } = symbol;
   const repositoryName = location?.resource?.repository?.name;
-  if (repositoryName) {
+  if (typeof repositoryName === 'string' && repositoryName.length > 0) {
     lines.push(`Repository: ${repositoryName}`);
   }
 
   const filePath = location?.resource?.path;
-  if (filePath) {
+  if (typeof filePath === 'string' && filePath.length > 0) {
     lines.push(`File: ${filePath}`);
   }
 
@@ -255,7 +255,7 @@ export async function searchSymbols(
   const { query, requested } = buildSearchQuery(params, acceptedTypes);
 
   const variables: Record<string, string | number | null> = { query };
-  if (cursor && cursor.trim().length > 0) {
+  if (typeof cursor === 'string' && cursor.trim().length > 0) {
     variables.cursor = cursor;
   } else {
     variables.cursor = null;
@@ -280,9 +280,13 @@ export async function searchSymbols(
     summaryLines.push(`Requested: ${requested.toString()}`);
     summaryLines.push(`Match Count: ${results.matchCount.toString()}`);
 
-    if (results.pageInfo) {
+    if (results.pageInfo != null) {
       summaryLines.push(`Has Next Page: ${results.pageInfo.hasNextPage ? 'yes' : 'no'}`);
-      if (results.pageInfo.hasNextPage && results.pageInfo.endCursor) {
+      if (
+        results.pageInfo.hasNextPage &&
+        typeof results.pageInfo.endCursor === 'string' &&
+        results.pageInfo.endCursor.length > 0
+      ) {
         summaryLines.push(`Next Page Cursor: ${results.pageInfo.endCursor}`);
       }
     }
@@ -297,11 +301,7 @@ export async function searchSymbols(
       (
         result,
       ): result is SymbolResultNode & { symbol: NonNullable<SymbolResultNode['symbol']> } => {
-        return (
-          result.__typename === 'SymbolSearchResult' &&
-          result.symbol !== null &&
-          result.symbol !== undefined
-        );
+        return result.__typename === 'SymbolSearchResult' && result.symbol != null;
       },
     );
 
