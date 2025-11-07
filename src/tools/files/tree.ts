@@ -20,7 +20,6 @@ interface FileTreeResponse {
               url: string;
               isDirectory: boolean;
               isSingleChild: boolean;
-              byteSize?: number | null;
               submodule?: {
                 url: string;
               } | null;

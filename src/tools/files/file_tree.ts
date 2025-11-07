@@ -11,7 +11,6 @@ interface FileTreeEntryResponse {
   url: string;
   isDirectory: boolean;
   isSingleChild: boolean;
-  byteSize?: number | null;
   submodule?: { url: string } | null;
 }
 
@@ -50,7 +49,6 @@ export interface FileTreeFileEntry {
   name: string;
   path: string;
   url: string;
-  byteSize?: number;
 }
 
 export interface FileTreeSubmoduleEntry {
@@ -182,7 +180,6 @@ async function fetchTreeEntries(
       name: entry.name,
       path: entry.path,
       url: entry.url,
-      byteSize: entry.byteSize ?? undefined,
     });
   }
 
