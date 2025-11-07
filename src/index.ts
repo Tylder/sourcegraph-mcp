@@ -10,7 +10,7 @@ import { z, type ZodTypeAny } from 'zod';
 import { getConfig, validateConfig } from './config.js';
 import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
-import { searchCode } from './tools/search/code.js';
+import { searchCode, type SearchVersion } from './tools/search/search_code.js';
 import { searchSymbols } from './tools/search/symbols.js';
 import { searchCommits } from './tools/search/commits.js';
 import { repoList } from './tools/repos/list.js';
@@ -51,15 +51,27 @@ server.tool(
   }
 );
 
+const SEARCH_VERSIONS = ['V1', 'V2', 'V3'] as const satisfies readonly SearchVersion[];
+
 const searchCodeSchema: Record<string, ZodTypeAny> = {
   query: z.string().describe('The search query (e.g., "repo:myrepo function auth")'),
   limit: z
     .number()
     .int()
     .min(1)
-    .max(100)
+    .max(500)
     .optional()
-    .describe('Maximum number of results (default: 10)'),
+    .describe('Maximum number of results (default: 10, max: 500)'),
+  version: z
+    .enum(SEARCH_VERSIONS)
+    .optional()
+    .describe('Search version flag understood by Sourcegraph (default: V3)'),
+  timeout: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe('Maximum duration in milliseconds before Sourcegraph aborts the search'),
 };
 
 server.tool(
@@ -69,14 +81,19 @@ server.tool(
   searchCodeSchema as any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (args: any) => {
-    const { query, limit } = args as { query: string; limit?: number };
-    const result = await searchCode(sgClient, { query, limit });
+    const { query, limit, version, timeout } = args as {
+      query: string;
+      limit?: number;
+      version?: SearchVersion;
+      timeout?: number;
+    };
+    const result = await searchCode(sgClient, { query, limit, version, timeout });
 
     return {
       content: [
         {
           type: 'text' as const,
-          text: result,
+          text: JSON.stringify(result, null, 2),
         },
       ],
     };

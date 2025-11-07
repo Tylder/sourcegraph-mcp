@@ -4,7 +4,7 @@ const toolHandlers = new Map<string, (args?: unknown) => Promise<unknown>>();
 const toolSchemas = new Map<string, unknown>();
 const registeredDescriptions = new Map<string, string>();
 const connectMock = vi.fn();
-const searchCodeMock = vi.fn().mockResolvedValue('code result');
+const searchCodeMock = vi.fn().mockResolvedValue({ code: 'result' });
 const searchSymbolsMock = vi.fn().mockResolvedValue('symbols result');
 const searchCommitsMock = vi.fn().mockResolvedValue('commits result');
 const repoListMock = vi.fn().mockResolvedValue('list result');
@@ -62,7 +62,7 @@ vi.mock('../../src/tools/util/connection.js', () => ({
   testConnection: testConnectionMock,
 }));
 
-vi.mock('../../src/tools/search/code.js', () => ({
+vi.mock('../../src/tools/search/search_code.js', () => ({
   searchCode: searchCodeMock,
 }));
 
@@ -149,8 +149,15 @@ describe('index entrypoint', () => {
     await toolHandlers.get('connection_test')?.();
     expect(testConnectionMock).toHaveBeenCalled();
 
-    await toolHandlers.get('search_code')?.({ query: 'q', limit: 2 });
-    expect(searchCodeMock).toHaveBeenCalledWith(expect.anything(), { query: 'q', limit: 2 });
+    await toolHandlers
+      .get('search_code')
+      ?.({ query: 'q', limit: 2, version: 'V2', timeout: 1234 });
+    expect(searchCodeMock).toHaveBeenCalledWith(expect.anything(), {
+      query: 'q',
+      limit: 2,
+      version: 'V2',
+      timeout: 1234,
+    });
 
     await toolHandlers.get('search_symbols')?.({ query: 'q', types: ['class'], limit: 3 });
     expect(searchSymbolsMock).toHaveBeenCalledWith(expect.anything(), {
