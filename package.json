@@ -17,6 +17,7 @@
     "coverage": "vitest run --coverage",
     "lint": "eslint --cache --cache-location node_modules/.cache/eslint src/",
     "lint:fix": "eslint --cache --cache-location node_modules/.cache/eslint src/ --fix",
+    "lint-staged": "lint-staged",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
