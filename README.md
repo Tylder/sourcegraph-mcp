@@ -82,6 +82,7 @@ Example queries:
 | Tool | Description |
 |------|-------------|
 | `connection_test` | Test connection and return version/user info |
+| `user_info` | Return the current Sourcegraph user's username, email, and organizations |
 | `search_code` | Advanced code search with filters |
 | `search_symbols` | Search for symbols (functions, classes) |
 | `search_commits` | Search git commit messages and diffs |

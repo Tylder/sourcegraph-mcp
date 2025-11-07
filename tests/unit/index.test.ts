@@ -14,7 +14,18 @@ const fileTreeMock = vi.fn().mockResolvedValue('tree result');
 const fileGetMock = vi.fn().mockResolvedValue('file get result');
 const fileBlameMock = vi.fn().mockResolvedValue('blame result');
 const testConnectionMock = vi.fn().mockResolvedValue({ foo: 'bar' });
-const configMock = { endpoint: 'https://example.com', accessToken: 'token', timeout: 1234, logLevel: 'info' };
+const userInfoMock = vi.fn().mockResolvedValue({
+  username: 'alice',
+  email: 'alice@example.com',
+  displayName: 'Alice',
+  organizations: [],
+});
+const configMock = {
+  endpoint: 'https://example.com',
+  accessToken: 'token',
+  timeout: 1234,
+  logLevel: 'info',
+};
 const validateConfigMock = vi.fn();
 const createdClients: unknown[] = [];
 
@@ -25,7 +36,10 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
       this.options = options;
     }
     tool(name: string, description: string, schemaOrHandler: unknown, maybeHandler?: unknown) {
-      const handler = typeof schemaOrHandler === 'function' ? schemaOrHandler : (maybeHandler as (args: unknown) => Promise<unknown>);
+      const handler =
+        typeof schemaOrHandler === 'function'
+          ? schemaOrHandler
+          : (maybeHandler as (args: unknown) => Promise<unknown>);
       const schema = typeof schemaOrHandler === 'function' ? undefined : schemaOrHandler;
       toolHandlers.set(name, handler);
       toolSchemas.set(name, schema);
@@ -60,6 +74,10 @@ vi.mock('../../src/graphql/client.js', () => ({
 
 vi.mock('../../src/tools/util/connection.js', () => ({
   testConnection: testConnectionMock,
+}));
+
+vi.mock('../../src/tools/util/user_info.js', () => ({
+  getUserInfo: userInfoMock,
 }));
 
 vi.mock('../../src/tools/search/code.js', () => ({
@@ -114,6 +132,7 @@ describe('index entrypoint', () => {
     fileGetMock.mockClear();
     fileBlameMock.mockClear();
     testConnectionMock.mockClear();
+    userInfoMock.mockClear();
     validateConfigMock.mockClear();
     createdClients.length = 0;
   });
@@ -130,6 +149,7 @@ describe('index entrypoint', () => {
 
     const toolNames = [
       'connection_test',
+      'user_info',
       'search_code',
       'search_symbols',
       'search_commits',
@@ -149,6 +169,9 @@ describe('index entrypoint', () => {
     await toolHandlers.get('connection_test')?.();
     expect(testConnectionMock).toHaveBeenCalled();
 
+    await toolHandlers.get('user_info')?.();
+    expect(userInfoMock).toHaveBeenCalled();
+
     await toolHandlers.get('search_code')?.({ query: 'q', limit: 2 });
     expect(searchCodeMock).toHaveBeenCalledWith(expect.anything(), { query: 'q', limit: 2 });
 
@@ -159,7 +182,13 @@ describe('index entrypoint', () => {
       limit: 3,
     });
 
-    await toolHandlers.get('search_commits')?.({ query: 'q', author: 'a', after: 'b', before: 'c', limit: 4 });
+    await toolHandlers.get('search_commits')?.({
+      query: 'q',
+      author: 'a',
+      after: 'b',
+      before: 'c',
+      limit: 4,
+    });
     expect(searchCommitsMock).toHaveBeenCalledWith(expect.anything(), {
       query: 'q',
       author: 'a',
@@ -182,13 +211,21 @@ describe('index entrypoint', () => {
     });
 
     await toolHandlers.get('file_tree')?.({ repo: 'r', path: 'p', rev: 'v' });
-    expect(fileTreeMock).toHaveBeenCalledWith(expect.anything(), { repo: 'r', path: 'p', rev: 'v' });
+    expect(fileTreeMock).toHaveBeenCalledWith(expect.anything(), {
+      repo: 'r',
+      path: 'p',
+      rev: 'v',
+    });
 
     await toolHandlers.get('file_get')?.({ repo: 'r', path: 'p', rev: 'v' });
     expect(fileGetMock).toHaveBeenCalledWith(expect.anything(), { repo: 'r', path: 'p', rev: 'v' });
 
     await toolHandlers.get('file_blame')?.({ repo: 'r', path: 'p', rev: 'v' });
-    expect(fileBlameMock).toHaveBeenCalledWith(expect.anything(), { repo: 'r', path: 'p', rev: 'v' });
+    expect(fileBlameMock).toHaveBeenCalledWith(expect.anything(), {
+      repo: 'r',
+      path: 'p',
+      rev: 'v',
+    });
 
     consoleSpy.mockRestore();
   });

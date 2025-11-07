@@ -10,6 +10,7 @@ import { z, type ZodTypeAny } from 'zod';
 import { getConfig, validateConfig } from './config.js';
 import { SourcegraphClient } from './graphql/client.js';
 import { testConnection } from './tools/util/connection.js';
+import { getUserInfo } from './tools/util/user_info.js';
 import { searchCode } from './tools/search/code.js';
 import { searchSymbols } from './tools/search/symbols.js';
 import { searchCommits } from './tools/search/commits.js';
@@ -50,6 +51,36 @@ server.tool(
         },
       ],
     };
+  }
+);
+
+server.tool(
+  'user_info',
+  "Return the current Sourcegraph user's username, email, and organizations",
+  async () => {
+    try {
+      const userInfo = await getUserInfo(sgClient);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(userInfo, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: `Error fetching user info: ${message}`,
+          },
+        ],
+      };
+    }
   }
 );
 
