@@ -17,6 +17,7 @@ export const FILE_TREE_QUERY = `
             url
             isDirectory
             isSingleChild
+            byteSize
             submodule {
               url
             }

@@ -19,6 +19,8 @@ import { repoBranches } from './tools/repos/branches.js';
 import { fileTree } from './tools/files/tree.js';
 import { fileGet } from './tools/files/get.js';
 import { fileBlame } from './tools/files/blame.js';
+import { repoCompareCommits } from './tools/repos/repo_compare_commits.js';
+import { repoLanguages } from './tools/repos/repo_languages.js';
 
 // Get and validate configuration
 const config = getConfig();
@@ -341,6 +343,59 @@ server.tool(
       variables: { repo: string; path: string; rev?: string }
     ) => Promise<string>;
     const result = await typedFileBlame(sgClient, { repo, path, rev });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: result,
+        },
+      ],
+    };
+  }
+);
+
+const repoCompareCommitsSchema: Record<string, ZodTypeAny> = {
+  repo: z.string().describe('Repository name (e.g., "github.com/sourcegraph/sourcegraph")'),
+  baseRev: z.string().describe('Base revision/branch/commit'),
+  headRev: z.string().describe('Head revision/branch/commit to compare'),
+};
+
+server.tool(
+  'repo_compare_commits',
+  'Compare two commits/branches and show the diff',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  repoCompareCommitsSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
+    const { repo, baseRev, headRev } = args as { repo: string; baseRev: string; headRev: string };
+    const result = await repoCompareCommits(sgClient, { repo, baseRev, headRev });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: result,
+        },
+      ],
+    };
+  }
+);
+
+const repoLanguagesSchema: Record<string, ZodTypeAny> = {
+  repo: z.string().describe('Repository name (e.g., "github.com/sourcegraph/sourcegraph")'),
+  rev: z.string().optional().describe('Repository revision/branch (default: HEAD)'),
+};
+
+server.tool(
+  'repo_languages',
+  'Get programming language statistics for a repository',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  repoLanguagesSchema as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (args: any) => {
+    const { repo, rev } = args as { repo: string; rev?: string };
+    const result = await repoLanguages(sgClient, { repo, rev });
 
     return {
       content: [

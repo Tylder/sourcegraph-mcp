@@ -1,0 +1,187 @@
+/**
+ * Repository list tool
+ */
+
+import type { SourcegraphClient } from '../../graphql/client.js';
+import { REPOSITORY_LIST_QUERY } from '../../graphql/queries/repos.js';
+
+interface RepositoryListResponse {
+  repositories: {
+    nodes: RepositoryNode[];
+    totalCount: number;
+    pageInfo: {
+      hasNextPage: boolean;
+      endCursor?: string | null;
+    };
+  };
+}
+
+interface RepositoryNode {
+  name: string;
+  url: string;
+  description?: string | null;
+  isPrivate: boolean;
+  isFork: boolean;
+  isArchived: boolean;
+  viewerCanAdminister: boolean;
+  mirrorInfo?: {
+    cloned: boolean;
+    cloneInProgress: boolean;
+  } | null;
+  defaultBranch?: {
+    displayName?: string | null;
+  } | null;
+  updatedAt: string;
+}
+
+export type RepositoryOrderField =
+  | 'REPOSITORY_NAME'
+  | 'STARS'
+  | 'UPDATED_AT'
+  | 'COMMIT_DATE'
+  | 'CREATED_AT';
+
+export type OrderDirection = 'ASC' | 'DESC';
+
+export interface RepoListOrderBy {
+  field?: RepositoryOrderField;
+  direction?: OrderDirection;
+}
+
+export interface RepoListParams {
+  query?: string;
+  first?: number;
+  after?: string;
+  orderBy?: RepoListOrderBy;
+}
+
+interface RepositoryListVariables {
+  first: number;
+  query?: string;
+  after?: string;
+  orderBy: {
+    field: RepositoryOrderField;
+    direction: OrderDirection;
+  };
+}
+
+type RepositoryListQueryVariables = RepositoryListVariables & Record<string, unknown>;
+
+const DEFAULT_FIRST = 20;
+const DEFAULT_ORDER_FIELD: RepositoryOrderField = 'REPOSITORY_NAME';
+const DEFAULT_ORDER_DIRECTION: OrderDirection = 'ASC';
+
+function buildQueryVariables(params: RepoListParams): RepositoryListQueryVariables {
+  const trimmedQuery = params.query?.trim();
+
+  const variables: RepositoryListQueryVariables = {
+    first: params.first ?? DEFAULT_FIRST,
+    orderBy: {
+      field: params.orderBy?.field ?? DEFAULT_ORDER_FIELD,
+      direction: params.orderBy?.direction ?? DEFAULT_ORDER_DIRECTION,
+    },
+  };
+
+  if (trimmedQuery) {
+    variables.query = trimmedQuery;
+  }
+
+  if (params.after) {
+    variables.after = params.after;
+  }
+
+  return variables;
+}
+
+function formatRepositoryStatus(repository: RepositoryNode): string | undefined {
+  const statuses: string[] = [];
+
+  if (repository.isPrivate) {
+    statuses.push('private');
+  }
+
+  if (repository.isFork) {
+    statuses.push('fork');
+  }
+
+  if (repository.isArchived) {
+    statuses.push('archived');
+  }
+
+  if (repository.viewerCanAdminister) {
+    statuses.push('admin');
+  }
+
+  const mirrorInfo = repository.mirrorInfo;
+  if (mirrorInfo) {
+    if (!mirrorInfo.cloned) {
+      statuses.push('not cloned');
+    }
+
+    if (mirrorInfo.cloneInProgress) {
+      statuses.push('cloning');
+    }
+  }
+
+  return statuses.length > 0 ? `Status: ${statuses.join(', ')}` : undefined;
+}
+
+function formatRepositoryDetails(repository: RepositoryNode, index: number): string[] {
+  const lines: (string | undefined)[] = [
+    `Repository ${(index + 1).toString()}:`,
+    `Name: ${repository.name}`,
+    `URL: ${repository.url}`,
+    repository.description ? `Description: ${repository.description}` : undefined,
+    formatRepositoryStatus(repository),
+    repository.defaultBranch?.displayName
+      ? `Default Branch: ${repository.defaultBranch.displayName}`
+      : undefined,
+    `Updated At: ${repository.updatedAt}`,
+  ];
+
+  return lines.filter((line): line is string => line !== undefined);
+}
+
+export async function repoList(client: SourcegraphClient, params: RepoListParams): Promise<string> {
+  const variables = buildQueryVariables(params);
+  const requested = params.first ?? DEFAULT_FIRST;
+
+  try {
+    const response = await client.query<RepositoryListResponse>(REPOSITORY_LIST_QUERY, variables);
+    const { repositories } = response;
+
+    const summaryLines: string[] = [
+      'Repository List',
+      `Total Count: ${repositories.totalCount.toString()}`,
+      `Requested: ${requested.toString()}`,
+      `Has Next Page: ${repositories.pageInfo.hasNextPage ? 'yes' : 'no'}`,
+      `Order: ${variables.orderBy.field} (${variables.orderBy.direction})`,
+    ];
+
+    if (variables.query) {
+      summaryLines.splice(3, 0, `Query: ${variables.query}`);
+    }
+
+    if (variables.after) {
+      summaryLines.push(`Starting Cursor: ${variables.after}`);
+    }
+
+    if (repositories.pageInfo.hasNextPage && repositories.pageInfo.endCursor) {
+      summaryLines.push(`Next Page Cursor: ${repositories.pageInfo.endCursor}`);
+    }
+
+    if (repositories.nodes.length === 0) {
+      summaryLines.push('', 'No repositories found.');
+      return `${summaryLines.join('\n')}\n`;
+    }
+
+    repositories.nodes.forEach((repository, index) => {
+      summaryLines.push('', ...formatRepositoryDetails(repository, index));
+    });
+
+    return `${summaryLines.join('\n')}\n`;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return `Error listing repositories: ${message}`;
+  }
+}
