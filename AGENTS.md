@@ -11,8 +11,13 @@ A comprehensive Model Context Protocol (MCP) server providing AI agents with acc
 **CRITICAL**: Always use the latest compatible versions of all dependencies.
 
 - Before adding ANY new dependency, check compatibility with existing packages
+- **After adding or editing dependencies in package.json, ALWAYS run `npm install`**
+- If `npm install` fails, troubleshoot and fix the error:
+  - Check if the version exists: `npm view package-name versions --json`
+  - Use the latest compatible version from the list
+  - Verify peer dependencies are satisfied
+  - Update package.json with the correct version
 - Use `npm outdated` to check for updates regularly
-- Verify peer dependencies are satisfied
 - Test after upgrading any dependency
 
 ### Testing Requirements
