@@ -1,7 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { repoInfo } from '../../../../src/tools/repos/info.js';
 import type { SourcegraphClient } from '../../../../src/graphql/client.js';
-import { createMockRepository, createMockClient } from '../../../test-utils.js';
+import {
+  createMockRepository,
+  createMockClient,
+  validateRepositoryResponseSchema,
+  expectResponseTime,
+} from '../../../test-utils.js';
 
 describe('repoInfo', () => {
   it('should format repository information correctly', async () => {
@@ -14,14 +19,32 @@ describe('repoInfo', () => {
 
     const result = await repoInfo(mockClient, { name: 'github.com/test/repo' });
 
+    // Validate response schema and content
+    const schema = validateRepositoryResponseSchema(result);
+    expect(schema.repository).toBe('github.com/test/repo');
+    expect(schema.url).toBe('https://sourcegraph.com/github.com/test/repo');
+    expect(schema.description).toBe('Test repository');
+    expect(schema.defaultBranch).toBe('main');
+    expect(schema.visibility).toBe('Public');
+    expect(schema.fork).toBe('Yes');
+    expect(schema.archived).toBe('No');
+    expect(schema.cloneStatus).toBe('Cloned');
+    expect(schema.stats).toEqual(['Can Administer: Yes', 'Last Updated: 2024-01-01T00:00:00Z']);
+  });
+
+  it('should respond quickly under normal load', async () => {
+    const mockRepository = createMockRepository();
+    const mockClient = createMockClient({
+      repository: mockRepository,
+    });
+
+    const result = await expectResponseTime(
+      async () => repoInfo(mockClient, { name: 'github.com/test/repo' }),
+      50, // Should complete in under 50ms
+    );
+
+    // Verify we got a result
     expect(result).toContain('Repository: github.com/test/repo');
-    expect(result).toContain('Description: Test repository');
-    expect(result).toContain('Default Branch: main');
-    expect(result).toContain('Visibility: Public');
-    expect(result).toContain('Fork: Yes');
-    expect(result).toContain('Clone Status: Cloned');
-    expect(result).toContain('Can Administer: Yes');
-    expect(result).toContain('Last Updated: 2024-01-01T00:00:00Z');
   });
 
   it('should handle missing repository', async () => {

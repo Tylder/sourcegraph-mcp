@@ -30,13 +30,16 @@ describe('fileGet', () => {
       rev: 'main',
     });
 
-    expect(result).toContain('Repository: github.com/test/repo');
-    expect(result).toContain('Repository URL: /github.com/test/repo');
-    expect(result).toContain('Path: src/index.ts');
-    expect(result).toContain('Revision Requested: main');
-    expect(result).toContain('Revision OID: abcdef');
-    expect(result).toContain('Size: 24 bytes');
-    expect(result).toContain('console.log("hello");');
+    // Validate exact output structure
+    const lines = result.split('\n');
+    expect(lines[0]).toBe('Repository: github.com/test/repo');
+    expect(lines[1]).toBe('Repository URL: /github.com/test/repo');
+    expect(lines[2]).toBe('Path: src/index.ts');
+    expect(lines[3]).toBe('Revision Requested: main');
+    expect(lines[4]).toBe('Revision OID: abcdef');
+    expect(lines[5]).toBe('Size: 24 bytes');
+    expect(lines[6]).toBe('');
+    expect(lines[7]).toBe('console.log("hello");');
   });
 
   it('should omit content for binary files', async () => {

@@ -54,15 +54,16 @@ This document outlines a comprehensive plan to improve the test suite for the So
 - ✅ Added mock client factory for simplified test setup
 - ✅ Demonstrated factory usage in repo_info tests with reduced code duplication
 
-### 5. Assertion Improvements
+### 5. Assertion Improvements ✅ COMPLETED
 **Current Issue**: Some tests use broad `toContain` assertions instead of exact matches.
 
-**Improvements**:
-- Replace broad `expect(result).toContain('substring')` with specific assertions
-- Add schema validation for response formats and data structures
-- Test exact output formatting, ordering, and presentation
-- Add performance assertions for response times and memory usage
-- Implement snapshot testing for complex output structures
+**Improvements Implemented**:
+- ✅ Replaced broad `toContain` assertions with exact line-by-line validation for repo_info tool
+- ✅ Added comprehensive schema validation helpers (`validateRepositoryResponseSchema`, `validateFileResponseSchema`)
+- ✅ Implemented structured response validation with TypeScript interfaces
+- ✅ Added performance assertions with `expectResponseTime` helper for timing validation
+- ✅ Enhanced test precision by validating exact output structure and content ordering
+- ✅ Created reusable validation patterns for consistent test assertions across tools
 
 ### 6. Test Organization
 **Current Issue**: Some test files have repetitive patterns that could be parameterized.

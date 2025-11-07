@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import type { SourcegraphClient } from '../src/graphql/client.js';
 
 /**
@@ -254,4 +258,115 @@ export const expectValidFileResponse = (result: string, filePath: string): void 
   expect(result).toContain(`Path: ${filePath}`);
   expect(result).toContain('Revision Requested:');
   expect(result).toContain('Size:');
+};
+
+// Schema validation helpers
+export interface RepositoryResponseSchema {
+  repository: string;
+  url: string;
+  description: string;
+  defaultBranch: string;
+  visibility: string;
+  fork: string;
+  archived: string;
+  cloneStatus: string;
+  stats?: string[];
+}
+
+export const validateRepositoryResponseSchema = (result: string): RepositoryResponseSchema => {
+  const lines = result.split('\n');
+
+  // Basic structure validation
+  expect(lines.length).toBeGreaterThanOrEqual(8);
+  expect(lines[0]).toMatch(/^Repository: /);
+  expect(lines[1]).toMatch(/^URL: /);
+  expect(lines[2]).toMatch(/^Description: /);
+  expect(lines[3]).toMatch(/^Default Branch: /);
+  expect(lines[4]).toMatch(/^Visibility: /);
+  expect(lines[5]).toMatch(/^Fork: /);
+  expect(lines[6]).toMatch(/^Archived: /);
+  expect(lines[7]).toMatch(/^Clone Status: /);
+
+  const schema: RepositoryResponseSchema = {
+    repository: lines[0].replace('Repository: ', ''),
+    url: lines[1].replace('URL: ', ''),
+    description: lines[2].replace('Description: ', ''),
+    defaultBranch: lines[3].replace('Default Branch: ', ''),
+    visibility: lines[4].replace('Visibility: ', ''),
+    fork: lines[5].replace('Fork: ', ''),
+    archived: lines[6].replace('Archived: ', ''),
+    cloneStatus: lines[7].replace('Clone Status: ', ''),
+  };
+
+  // Check for stats section
+  if (lines.length > 9 && lines[9] === 'Repository Stats:') {
+    schema.stats = [];
+    for (let i = 10; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.startsWith('- ')) {
+        schema.stats.push(line.substring(2));
+      }
+    }
+  }
+
+  return schema;
+};
+
+export interface FileResponseSchema {
+  repository: string;
+  repositoryUrl: string;
+  path: string;
+  revisionRequested: string;
+  revisionOid: string;
+  size: string;
+  content?: string;
+  warning?: string;
+}
+
+export const validateFileResponseSchema = (result: string): FileResponseSchema => {
+  const lines = result.split('\n');
+
+  // Basic structure validation
+  expect(lines.length).toBeGreaterThanOrEqual(6);
+  expect(lines[0]).toMatch(/^Repository: /);
+  expect(lines[1]).toMatch(/^Repository URL: /);
+  expect(lines[2]).toMatch(/^Path: /);
+  expect(lines[3]).toMatch(/^Revision Requested: /);
+  expect(lines[4]).toMatch(/^Revision OID: /);
+  expect(lines[5]).toMatch(/^Size: /);
+
+  const schema: FileResponseSchema = {
+    repository: lines[0].replace('Repository: ', ''),
+    repositoryUrl: lines[1].replace('Repository URL: ', ''),
+    path: lines[2].replace('Path: ', ''),
+    revisionRequested: lines[3].replace('Revision Requested: ', ''),
+    revisionOid: lines[4].replace('Revision OID: ', ''),
+    size: lines[5].replace('Size: ', ''),
+  };
+
+  // Check for content or warning
+  if (lines.length > 7) {
+    if (lines[6] === 'Warning: Binary file content is not displayed.') {
+      // eslint-disable-next-line @typescript-eslint/prefer-destructuring
+      schema.warning = lines[6];
+    } else if (lines[6] === '' && lines[7]) {
+      // eslint-disable-next-line @typescript-eslint/prefer-destructuring
+      schema.content = lines[7];
+    }
+  }
+
+  return schema;
+};
+
+// Performance assertion helpers
+export const expectResponseTime = async <T>(
+  operation: () => Promise<T>,
+  maxTimeMs = 1000,
+): Promise<T> => {
+  const startTime = Date.now();
+  const result = await operation();
+  const duration = Date.now() - startTime;
+
+  expect(duration).toBeLessThan(maxTimeMs);
+  return result;
 };
