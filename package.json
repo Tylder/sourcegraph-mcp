@@ -63,5 +63,11 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.3",
     "vitest": "4.0.7"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --cache --cache-location node_modules/.cache/eslint --fix",
+      "prettier --write"
+    ]
   }
 }
