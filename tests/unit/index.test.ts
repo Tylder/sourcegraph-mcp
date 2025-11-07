@@ -10,6 +10,8 @@ const searchCommitsMock = vi.fn().mockResolvedValue('commits result');
 const repoListMock = vi.fn().mockResolvedValue('list result');
 const repoInfoMock = vi.fn().mockResolvedValue('info result');
 const repoBranchesMock = vi.fn().mockResolvedValue('branches result');
+const repoCompareCommitsMock = vi.fn().mockResolvedValue('compare result');
+const repoLanguagesMock = vi.fn().mockResolvedValue('languages result');
 const fileTreeMock = vi.fn().mockResolvedValue('tree result');
 const fileGetMock = vi.fn().mockResolvedValue('file get result');
 const fileBlameMock = vi.fn().mockResolvedValue('blame result');
@@ -35,7 +37,12 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
     constructor(options: unknown) {
       this.options = options;
     }
-    tool(name: string, description: string, schemaOrHandler: unknown, maybeHandler?: unknown) {
+    tool(
+      name: string,
+      description: string,
+      schemaOrHandler: unknown,
+      maybeHandler?: unknown
+    ): void {
       const handler =
         typeof schemaOrHandler === 'function'
           ? schemaOrHandler
@@ -51,7 +58,7 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
 
 vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
   StdioServerTransport: class {
-    toString() {
+    toString(): string {
       return '[MockTransport]';
     }
   },
@@ -104,6 +111,14 @@ vi.mock('../../src/tools/repos/branches.js', () => ({
   repoBranches: repoBranchesMock,
 }));
 
+vi.mock('../../src/tools/repos/repo_compare_commits.js', () => ({
+  repoCompareCommits: repoCompareCommitsMock,
+}));
+
+vi.mock('../../src/tools/repos/repo_languages.js', () => ({
+  repoLanguages: repoLanguagesMock,
+}));
+
 vi.mock('../../src/tools/files/tree.js', () => ({
   fileTree: fileTreeMock,
 }));
@@ -118,6 +133,7 @@ vi.mock('../../src/tools/files/blame.js', () => ({
 
 describe('index entrypoint', () => {
   beforeEach(() => {
+    vi.resetModules();
     toolHandlers.clear();
     toolSchemas.clear();
     registeredDescriptions.clear();
@@ -128,6 +144,8 @@ describe('index entrypoint', () => {
     repoListMock.mockClear();
     repoInfoMock.mockClear();
     repoBranchesMock.mockClear();
+    repoCompareCommitsMock.mockClear();
+    repoLanguagesMock.mockClear();
     fileTreeMock.mockClear();
     fileGetMock.mockClear();
     fileBlameMock.mockClear();
@@ -138,7 +156,7 @@ describe('index entrypoint', () => {
   });
 
   it('registers all tools and executes handlers', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation((): void => undefined);
 
     await import('../../src/index.js');
 
@@ -156,6 +174,8 @@ describe('index entrypoint', () => {
       'repo_list',
       'repo_info',
       'repo_branches',
+      'repo_compare_commits',
+      'repo_languages',
       'file_tree',
       'file_get',
       'file_blame',
@@ -210,6 +230,23 @@ describe('index entrypoint', () => {
       limit: 6,
     });
 
+    await toolHandlers.get('repo_compare_commits')?.({
+      repo: 'name',
+      baseRev: 'main',
+      headRev: 'feature',
+    });
+    expect(repoCompareCommitsMock).toHaveBeenCalledWith(expect.anything(), {
+      repo: 'name',
+      baseRev: 'main',
+      headRev: 'feature',
+    });
+
+    await toolHandlers.get('repo_languages')?.({ repo: 'name', rev: 'main' });
+    expect(repoLanguagesMock).toHaveBeenCalledWith(expect.anything(), {
+      repo: 'name',
+      rev: 'main',
+    });
+
     await toolHandlers.get('file_tree')?.({ repo: 'r', path: 'p', rev: 'v' });
     expect(fileTreeMock).toHaveBeenCalledWith(expect.anything(), {
       repo: 'r',
@@ -225,6 +262,38 @@ describe('index entrypoint', () => {
       repo: 'r',
       path: 'p',
       rev: 'v',
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it('returns friendly error messages when user info lookup fails', async () => {
+    userInfoMock.mockRejectedValueOnce('network unavailable');
+    userInfoMock.mockRejectedValueOnce(new Error('still broken'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation((): void => undefined);
+
+    const module = await import('../../src/index.js');
+    expect(module).toBeDefined();
+
+    const stringErrorResponse = await toolHandlers.get('user_info')?.();
+    const errorObjectResponse = await toolHandlers.get('user_info')?.();
+
+    expect(stringErrorResponse).toEqual({
+      content: [
+        {
+          type: 'text',
+          text: 'Error fetching user info: network unavailable',
+        },
+      ],
+    });
+
+    expect(errorObjectResponse).toEqual({
+      content: [
+        {
+          type: 'text',
+          text: 'Error fetching user info: still broken',
+        },
+      ],
     });
 
     consoleSpy.mockRestore();
