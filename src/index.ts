@@ -336,7 +336,11 @@ server.tool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (args: any) => {
     const { repo, path, rev } = args as { repo: string; path: string; rev?: string };
-    const result = await fileBlame(sgClient, { repo, path, rev });
+    const typedFileBlame = fileBlame as (
+      client: SourcegraphClient,
+      variables: { repo: string; path: string; rev?: string }
+    ) => Promise<string>;
+    const result = await typedFileBlame(sgClient, { repo, path, rev });
 
     return {
       content: [
