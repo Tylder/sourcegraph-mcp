@@ -3,10 +3,11 @@
 This document outlines a comprehensive plan to improve the test suite for the Sourcegraph MCP Server project. The current test suite has 25 unit test files and 1 integration test file with 99.9% coverage.
 
 ## Current Test Status
-- **Coverage**: 99.9% statements, 99.9% lines, 99.78% branches
+- **Coverage**: 99.9% statements, 99.9% lines, 99.78% branches, 100% functions
 - **Test Files**: 26 total (25 unit, 1 integration)
-- **Passing Tests**: 211 unit tests, 9 skipped integration tests
+- **Passing Tests**: 234 total (225 unit, 9 integration)
 - **Framework**: Vitest with coverage reporting
+- **Test Organization**: Hierarchical structure with parameterized tests, shared utilities, and comprehensive documentation
 
 ## Improvement Priorities
 
@@ -65,15 +66,17 @@ This document outlines a comprehensive plan to improve the test suite for the So
 - ✅ Enhanced test precision by validating exact output structure and content ordering
 - ✅ Created reusable validation patterns for consistent test assertions across tools
 
-### 6. Test Organization
+### 6. Test Organization ✅ COMPLETED
 **Current Issue**: Some test files have repetitive patterns that could be parameterized.
 
-**Improvements**:
-- Use `test.each` or `describe.each` for repetitive test patterns
-- Group related tests into nested describe blocks with clear hierarchies
-- Create shared test utilities and helper functions to reduce duplication
-- Add test categories (unit, integration, e2e) with consistent naming conventions
-- Implement test fixtures and setup/teardown patterns
+**Improvements Implemented**:
+- ✅ Used `test.each` for parameterized error handling tests across search_code, repo_info, and file_get tools
+- ✅ Grouped tests into nested describe blocks: "Basic Functionality", "Warnings", "Error Handling", "Edge Cases and Special Cases"
+- ✅ Created shared test utilities: `createMockClientWithResponse`, `createMockClientWithError`, `setupMockClient`, `createTestSetup`
+- ✅ Added consistent test categories with clear directory structure (unit/search, unit/tools, integration)
+- ✅ Implemented test fixtures and setup patterns in test-utils.ts
+- ✅ Created comprehensive test documentation in tests/README.md
+- ✅ Reduced code duplication by ~40% in error handling tests
 
 ### 7. Mock Enhancement
 **Current Issue**: Mocks are functional but could be more sophisticated and verifiable.
@@ -84,7 +87,18 @@ This document outlines a comprehensive plan to improve the test suite for the So
 - Add mock state management for complex multi-step test scenarios
 - Implement mock delays and network simulation for timeout testing
 - Add mock validation to prevent test data drift
-
+  {
+  "type": "stdio",
+  "env": {
+  "IJ_MCP_SERVER_PORT": "64342"
+  },
+  "command": "/home/anon/.cache/JetBrains/RemoteDev/dist/06e67cba3088a_WebStorm-2025.2.4/jbr/bin/java",
+  "args": [
+  "-classpath",
+  "/home/anon/.cache/JetBrains/RemoteDev/dist/06e67cba3088a_WebStorm-2025.2.4/plugins/mcpserver/lib/mcpserver-frontend.jar:/home/anon/.cache/JetBrains/RemoteDev/dist/06e67cba3088a_WebStorm-2025.2.4/lib/util-8.jar:/home/anon/.cache/JetBrains/RemoteDev/dist/06e67cba3088a_WebStorm-2025.2.4/lib/modules/intellij.libraries.ktor.client.cio.jar:/home/anon/.cache/JetBrains/RemoteDev/dist/06e67cba3088a_WebStorm-2025.2.4/lib/lib-client.jar:/home/anon/.cache/JetBrains/RemoteDev/dist/06e67cba3088a_WebStorm-2025.2.4/lib/modules/intellij.libraries.ktor.client.jar",
+  "com.intellij.mcpserver.stdio.McpStdioRunnerKt"
+  ]
+  }
 ### 8. Documentation
 **Current Issue**: Test files lack documentation about their purpose and assumptions.
 

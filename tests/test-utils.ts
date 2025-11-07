@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { vi } from 'vitest';
 import type { SourcegraphClient } from '../src/graphql/client.js';
 
 /**
@@ -356,6 +357,57 @@ export const validateFileResponseSchema = (result: string): FileResponseSchema =
   }
 
   return schema;
+};
+
+// Mock creation helpers
+export const createMockClientWithResponse = (response: any) => ({
+  query: vi.fn().mockResolvedValue(response),
+});
+
+export const createMockClientWithError = (error: any) => ({
+  query: vi.fn().mockRejectedValue(error),
+});
+
+// Error testing helpers
+export const testErrorHandling = async (
+  toolFunction: (client: any, params: any) => Promise<string>,
+  params: any,
+  errorScenarios: Array<{ error: any; expectedMessage: string }>,
+) => {
+  describe('Error Handling', () => {
+    it.each(errorScenarios)(
+      'should handle $error gracefully',
+      async ({ error, expectedMessage }) => {
+        const mockClient = createMockClientWithError(error);
+        const result = await toolFunction(mockClient, params);
+        expect(result).toContain(expectedMessage);
+      },
+    );
+  });
+};
+
+// Test fixtures and setup helpers
+export const setupMockClient = (response?: any) => {
+  const queryMock = vi.fn();
+  if (response !== undefined) {
+    queryMock.mockResolvedValue(response);
+  }
+  return {
+    query: queryMock,
+    mockClient: { query: queryMock } as unknown as SourcegraphClient,
+    queryMock,
+  };
+};
+
+export const createTestSetup = () => {
+  const { mockClient, queryMock } = setupMockClient();
+  return {
+    mockClient,
+    queryMock,
+    resetMocks: () => {
+      queryMock.mockClear();
+    },
+  };
 };
 
 // Performance assertion helpers

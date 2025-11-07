@@ -4,6 +4,7 @@ import type { SourcegraphClient } from '../../../../src/graphql/client.js';
 import {
   createMockRepository,
   createMockClient,
+  createMockClientWithError,
   validateRepositoryResponseSchema,
   expectResponseTime,
 } from '../../../test-utils.js';
@@ -173,23 +174,17 @@ describe('repoInfo', () => {
     expect(result).toContain('Clone Status: Not cloned');
   });
 
-  it('should handle query errors gracefully', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue(new Error('GraphQL error')),
-    } as unknown as SourcegraphClient;
-
-    const result = await repoInfo(mockClient, { name: 'github.com/test/repo' });
-
-    expect(result).toBe('Error fetching repository info: GraphQL error');
-  });
-
-  it('should handle non-Error exceptions', async () => {
-    const mockClient = {
-      query: vi.fn().mockRejectedValue('string error'),
-    } as unknown as SourcegraphClient;
-
-    const result = await repoInfo(mockClient, { name: 'github.com/test/repo' });
-
-    expect(result).toBe('Error fetching repository info: string error');
+  describe('Error Handling', () => {
+    it.each([
+      {
+        error: new Error('GraphQL error'),
+        expectedMessage: 'Error fetching repository info: GraphQL error',
+      },
+      { error: 'string error', expectedMessage: 'Error fetching repository info: string error' },
+    ])('should handle $error gracefully', async ({ error, expectedMessage }) => {
+      const mockClient = createMockClientWithError(error);
+      const result = await repoInfo(mockClient, { name: 'github.com/test/repo' });
+      expect(result).toBe(expectedMessage);
+    });
   });
 });

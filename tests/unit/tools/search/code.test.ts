@@ -3,355 +3,347 @@ import { searchCode } from '../../../../src/tools/search/code.js';
 import type { SourcegraphClient } from '../../../../src/graphql/client.js';
 
 describe('searchCode', () => {
-  it('should format search results correctly', async () => {
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [
-            {
-              __typename: 'FileMatch',
-              file: {
-                path: 'src/auth.ts',
-                url: '/repo/-/blob/src/auth.ts',
-              },
-              repository: {
-                name: 'github.com/test/repo',
-                url: '/github.com/test/repo',
-              },
-              lineMatches: [
-                {
-                  lineNumber: 42,
-                  offsetAndLengths: [[0, 10]],
-                  preview: 'function authenticate()',
+  describe('Basic Functionality', () => {
+    it('should format search results correctly', async () => {
+      const queryMock = vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [
+              {
+                __typename: 'FileMatch',
+                file: {
+                  path: 'src/auth.ts',
+                  url: '/repo/-/blob/src/auth.ts',
                 },
-              ],
-            },
-          ],
-          matchCount: 1,
-          limitHit: false,
+                repository: {
+                  name: 'github.com/test/repo',
+                  url: '/github.com/test/repo',
+                },
+                lineMatches: [
+                  {
+                    lineNumber: 42,
+                    offsetAndLengths: [[0, 10]],
+                    preview: 'function authenticate()',
+                  },
+                ],
+              },
+            ],
+            matchCount: 1,
+            limitHit: false,
+          },
         },
-      },
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: 'authenticate' });
+
+      expect(result).toContain('Search Query: authenticate');
+      expect(result).toContain('Result Count: 1');
+      expect(result).toContain('Repository: github.com/test/repo');
+      expect(result).toContain('File: src/auth.ts');
+      expect(result).toContain('Line 42: function authenticate()');
     });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    const result = await searchCode(mockClient, { query: 'authenticate' });
-
-    expect(result).toContain('Search Query: authenticate');
-    expect(result).toContain('Result Count: 1');
-    expect(result).toContain('Repository: github.com/test/repo');
-    expect(result).toContain('File: src/auth.ts');
-    expect(result).toContain('Line 42: function authenticate()');
-  });
-
-  it('should apply limit to query', async () => {
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [],
-          matchCount: 0,
-          limitHit: false,
-        },
-      },
-    });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    await searchCode(mockClient, { query: 'test', limit: 5 });
-
-    expect(queryMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        query: 'test count:5',
-      }),
-    );
-  });
-
-  it('should handle no results', async () => {
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [],
-          matchCount: 0,
-          limitHit: false,
-        },
-      },
-    });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: 'nonexistent' });
-
-    expect(result).toContain('No results found');
-  });
-
-  it('should warn about limit hit', async () => {
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [],
-          matchCount: 100,
-          limitHit: true,
-        },
-      },
-    });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: 'common', limit: 10 });
-
-    expect(result).toContain('Result limit hit');
-  });
-
-  it('should warn about cloning repositories', async () => {
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [],
-          matchCount: 0,
-          limitHit: false,
-          cloning: [{ name: 'repo1' }, { name: 'repo2' }],
-        },
-      },
-    });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: 'test' });
-
-    expect(result).toContain('2 repositories still cloning');
-  });
-
-  it('should warn about timed out repositories', async () => {
-    const mockClient = {
-      query: vi.fn().mockResolvedValue({
+    it('should apply limit to query', async () => {
+      const queryMock = vi.fn().mockResolvedValue({
         search: {
           results: {
             results: [],
             matchCount: 0,
             limitHit: false,
-            timedout: [{ name: 'slow-repo' }],
           },
         },
-      }),
-    } as unknown as SourcegraphClient;
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    const result = await searchCode(mockClient, { query: 'test' });
+      await searchCode(mockClient, { query: 'test', limit: 5 });
 
-    expect(result).toContain('1 repositories timed out');
+      expect(queryMock).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          query: 'test count:5',
+        }),
+      );
+    });
+
+    it('should handle no results', async () => {
+      const queryMock = vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [],
+            matchCount: 0,
+            limitHit: false,
+          },
+        },
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: 'nonexistent' });
+
+      expect(result).toContain('No results found');
+    });
   });
 
-  it('should handle query errors gracefully', async () => {
-    const queryMock = vi.fn().mockRejectedValue(new Error('GraphQL error'));
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+  describe('Warnings', () => {
+    it('should warn about limit hit', async () => {
+      const queryMock = vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [],
+            matchCount: 100,
+            limitHit: true,
+          },
+        },
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    const result = await searchCode(mockClient, { query: 'test' });
+      const result = await searchCode(mockClient, { query: 'common', limit: 10 });
 
-    expect(result).toContain('Error searching code: GraphQL error');
-  });
+      expect(result).toContain('Result limit hit');
+    });
 
-  it('should handle results without line matches', async () => {
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [
-            {
-              __typename: 'FileMatch',
-              file: {
-                path: 'README.md',
-                url: '/repo/-/blob/README.md',
-              },
-              repository: {
-                name: 'github.com/test/repo',
-                url: '/github.com/test/repo',
-              },
-              lineMatches: [],
+    it('should warn about cloning repositories', async () => {
+      const queryMock = vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [],
+            matchCount: 0,
+            limitHit: false,
+            cloning: [{ name: 'repo1' }, { name: 'repo2' }],
+          },
+        },
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: 'test' });
+
+      expect(result).toContain('2 repositories still cloning');
+    });
+
+    it('should warn about timed out repositories', async () => {
+      const mockClient = {
+        query: vi.fn().mockResolvedValue({
+          search: {
+            results: {
+              results: [],
+              matchCount: 0,
+              limitHit: false,
+              timedout: [{ name: 'slow-repo' }],
             },
-          ],
-          matchCount: 1,
-          limitHit: false,
-        },
+          },
+        }),
+      } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: 'test' });
+
+      expect(result).toContain('1 repositories timed out');
+    });
+  });
+
+  describe('Error Handling', () => {
+    it.each([
+      { error: new Error('GraphQL error'), expectedMessage: 'Error searching code: GraphQL error' },
+      { error: 'string error', expectedMessage: 'Error searching code: string error' },
+      {
+        error: new Error('Request timeout'),
+        expectedMessage: 'Error searching code: Request timeout',
       },
-    });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: 'test' });
-
-    expect(result).toContain('Repository: github.com/test/repo');
-    expect(result).toContain('File: README.md');
-    expect(result).not.toContain('Matches:');
-  });
-
-  it('should handle non-Error exceptions in query', async () => {
-    const queryMock = vi.fn().mockRejectedValue('string error');
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: 'test' });
-
-    expect(result).toContain('Error searching code: string error');
-  });
-
-  it('should handle timeout errors gracefully', async () => {
-    const queryMock = vi.fn().mockRejectedValue(new Error('Request timeout'));
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: 'test' });
-
-    expect(result).toContain('Error searching code: Request timeout');
-  });
-
-  it('should handle rate limiting errors', async () => {
-    const queryMock = vi.fn().mockRejectedValue(new Error('Rate limit exceeded'));
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: 'test' });
-
-    expect(result).toContain('Error searching code: Rate limit exceeded');
-  });
-
-  it('should handle malformed GraphQL responses', async () => {
-    const queryMock = vi.fn().mockResolvedValue({ invalid: 'response' });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: 'test' });
-
-    // Should handle the malformed response gracefully
-    expect(typeof result).toBe('string');
-    expect(result.length).toBeGreaterThan(0);
-  });
-
-  it('should handle null search results', async () => {
-    const queryMock = vi.fn().mockResolvedValue({
-      search: null,
-    });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: 'test' });
-
-    expect(typeof result).toBe('string');
-    expect(result.length).toBeGreaterThan(0);
-  });
-
-  it('should handle extremely long search queries', async () => {
-    const longQuery = `repo:github.com/test/repo ${'very '.repeat(100)}long search query with many terms`;
-
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [],
-          matchCount: 0,
-          limitHit: false,
-        },
+      {
+        error: new Error('Rate limit exceeded'),
+        expectedMessage: 'Error searching code: Rate limit exceeded',
       },
+    ])('should handle $error gracefully', async ({ error, expectedMessage }) => {
+      const queryMock = vi.fn().mockRejectedValue(error);
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: 'test' });
+
+      expect(result).toContain(expectedMessage);
     });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
-
-    const result = await searchCode(mockClient, { query: longQuery });
-
-    expect(result).toContain(`Search Query: ${longQuery}`);
-    expect(result).toContain('No results found');
   });
 
-  it('should handle search queries with special characters and Unicode', async () => {
-    const unicodeQuery = 'repo:github.com/tëst/répôt function 世界 🌍 àáâãäå';
-
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [
-            {
-              __typename: 'FileMatch',
-              file: {
-                path: 'src/tëst.js',
-                url: '/repo/-/blob/src/tëst.js',
-              },
-              repository: {
-                name: 'github.com/tëst/répôt',
-                url: '/github.com/tëst/répôt',
-              },
-              lineMatches: [
-                {
-                  lineNumber: 42,
-                  offsetAndLengths: [[0, 10]],
-                  preview: 'function 世界() {',
+  describe('Edge Cases and Special Cases', () => {
+    it('should handle results without line matches', async () => {
+      const queryMock = vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [
+              {
+                __typename: 'FileMatch',
+                file: {
+                  path: 'README.md',
+                  url: '/repo/-/blob/README.md',
                 },
-              ],
-            },
-          ],
-          matchCount: 1,
-          limitHit: false,
+                repository: {
+                  name: 'github.com/test/repo',
+                  url: '/github.com/test/repo',
+                },
+                lineMatches: [],
+              },
+            ],
+            matchCount: 1,
+            limitHit: false,
+          },
         },
-      },
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: 'test' });
+
+      expect(result).toContain('Repository: github.com/test/repo');
+      expect(result).toContain('File: README.md');
+      expect(result).not.toContain('Matches:');
     });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    const result = await searchCode(mockClient, { query: unicodeQuery });
+    it('should handle malformed GraphQL responses', async () => {
+      const queryMock = vi.fn().mockResolvedValue({ invalid: 'response' });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    expect(result).toContain(`Search Query: ${unicodeQuery}`);
-    expect(result).toContain('Repository: github.com/tëst/répôt');
-    expect(result).toContain('File: src/tëst.js');
-    expect(result).toContain('function 世界()');
-  });
+      const result = await searchCode(mockClient, { query: 'test' });
 
-  it('should handle results without lineMatches field', async () => {
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [
-            {
-              __typename: 'FileMatch',
-              file: {
-                path: 'package.json',
-                url: '/repo/-/blob/package.json',
-              },
-              repository: {
-                name: 'github.com/test/repo',
-                url: '/github.com/test/repo',
-              },
-            },
-          ],
-          matchCount: 1,
-          limitHit: false,
+      // Should handle the malformed response gracefully
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should handle null search results', async () => {
+      const queryMock = vi.fn().mockResolvedValue({
+        search: null,
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: 'test' });
+
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should handle extremely long search queries', async () => {
+      const longQuery = `repo:github.com/test/repo ${'very '.repeat(100)}long search query with many terms`;
+
+      const queryMock = vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [],
+            matchCount: 0,
+            limitHit: false,
+          },
         },
-      },
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: longQuery });
+
+      expect(result).toContain(`Search Query: ${longQuery}`);
+      expect(result).toContain('No results found');
     });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    const result = await searchCode(mockClient, { query: 'test' });
+    it('should handle search queries with special characters and Unicode', async () => {
+      const unicodeQuery = 'repo:github.com/tëst/répôt function 世界 🌍 àáâãäå';
 
-    expect(result).toContain('Repository: github.com/test/repo');
-    expect(result).toContain('File: package.json');
-    expect(result).not.toContain('Matches:');
-  });
-
-  it('should skip non-FileMatch results', async () => {
-    const queryMock = vi.fn().mockResolvedValue({
-      search: {
-        results: {
-          results: [
-            {
-              __typename: 'CommitMatch',
-            },
-            {
-              __typename: 'FileMatch',
-              file: {
-                path: 'test.ts',
-                url: '/repo/-/blob/test.ts',
+      const queryMock = vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [
+              {
+                __typename: 'FileMatch',
+                file: {
+                  path: 'src/tëst.js',
+                  url: '/repo/-/blob/src/tëst.js',
+                },
+                repository: {
+                  name: 'github.com/tëst/répôt',
+                  url: '/github.com/tëst/répôt',
+                },
+                lineMatches: [
+                  {
+                    lineNumber: 42,
+                    offsetAndLengths: [[0, 10]],
+                    preview: 'function 世界() {',
+                  },
+                ],
               },
-              repository: {
-                name: 'github.com/test/repo',
-                url: '/github.com/test/repo',
-              },
-            },
-          ],
-          matchCount: 2,
-          limitHit: false,
+            ],
+            matchCount: 1,
+            limitHit: false,
+          },
         },
-      },
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: unicodeQuery });
+
+      expect(result).toContain(`Search Query: ${unicodeQuery}`);
+      expect(result).toContain('Repository: github.com/tëst/répôt');
+      expect(result).toContain('File: src/tëst.js');
+      expect(result).toContain('function 世界()');
     });
-    const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    const result = await searchCode(mockClient, { query: 'test' });
+    it('should handle results without lineMatches field', async () => {
+      const queryMock = vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [
+              {
+                __typename: 'FileMatch',
+                file: {
+                  path: 'package.json',
+                  url: '/repo/-/blob/package.json',
+                },
+                repository: {
+                  name: 'github.com/test/repo',
+                  url: '/github.com/test/repo',
+                },
+              },
+            ],
+            matchCount: 1,
+            limitHit: false,
+          },
+        },
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
 
-    expect(result).toContain('Result Count: 2');
-    // First result is skipped (CommitMatch), so FileMatch becomes Result 2
-    expect(result).toContain('Result 2:');
-    expect(result).toContain('File: test.ts');
-    expect(result).not.toContain('Result 1:');
+      const result = await searchCode(mockClient, { query: 'test' });
+
+      expect(result).toContain('Repository: github.com/test/repo');
+      expect(result).toContain('File: package.json');
+      expect(result).not.toContain('Matches:');
+    });
+
+    it('should skip non-FileMatch results', async () => {
+      const queryMock = vi.fn().mockResolvedValue({
+        search: {
+          results: {
+            results: [
+              {
+                __typename: 'CommitMatch',
+              },
+              {
+                __typename: 'FileMatch',
+                file: {
+                  path: 'test.ts',
+                  url: '/repo/-/blob/test.ts',
+                },
+                repository: {
+                  name: 'github.com/test/repo',
+                  url: '/github.com/test/repo',
+                },
+              },
+            ],
+            matchCount: 2,
+            limitHit: false,
+          },
+        },
+      });
+      const mockClient = { query: queryMock } as unknown as SourcegraphClient;
+
+      const result = await searchCode(mockClient, { query: 'test' });
+
+      expect(result).toContain('Result Count: 2');
+      // First result is skipped (CommitMatch), so FileMatch becomes Result 2
+      expect(result).toContain('Result 2:');
+      expect(result).toContain('File: test.ts');
+      expect(result).not.toContain('Result 1:');
+    });
   });
 });

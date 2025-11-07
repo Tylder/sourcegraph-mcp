@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { fileGet } from '../../../../src/tools/files/file_get.js';
 import type { SourcegraphClient } from '../../../../src/graphql/client.js';
+import { createMockClientWithError } from '../../../test-utils.js';
 
 describe('fileGet', () => {
   it('should return file content with metadata', async () => {
@@ -246,52 +247,29 @@ describe('fileGet', () => {
     );
   });
 
-  it('should handle errors gracefully', async () => {
-    const query = vi.fn().mockRejectedValue(new Error('GraphQL error'));
-    const mockClient = { query } as unknown as SourcegraphClient;
-
-    const result = await fileGet(mockClient, {
-      repo: 'github.com/test/repo',
-      path: 'src/index.ts',
+  describe('Error Handling', () => {
+    it.each([
+      {
+        error: new Error('GraphQL error'),
+        expectedMessage: 'Error retrieving file: GraphQL error',
+      },
+      { error: 'GraphQL error', expectedMessage: 'Error retrieving file: GraphQL error' },
+      {
+        error: new Error('Connection timeout'),
+        expectedMessage: 'Error retrieving file: Connection timeout',
+      },
+      {
+        error: new Error('Permission denied'),
+        expectedMessage: 'Error retrieving file: Permission denied',
+      },
+    ])('should handle $error gracefully', async ({ error, expectedMessage }) => {
+      const mockClient = createMockClientWithError(error);
+      const result = await fileGet(mockClient, {
+        repo: 'github.com/test/repo',
+        path: 'src/index.ts',
+      });
+      expect(result).toBe(expectedMessage);
     });
-
-    expect(result).toBe('Error retrieving file: GraphQL error');
-  });
-
-  it('should handle non-Error rejections gracefully', async () => {
-    const query = vi.fn().mockRejectedValue('GraphQL error');
-    const mockClient = { query } as unknown as SourcegraphClient;
-
-    const result = await fileGet(mockClient, {
-      repo: 'github.com/test/repo',
-      path: 'src/index.ts',
-    });
-
-    expect(result).toBe('Error retrieving file: GraphQL error');
-  });
-
-  it('should handle connection timeout errors', async () => {
-    const query = vi.fn().mockRejectedValue(new Error('Connection timeout'));
-    const mockClient = { query } as unknown as SourcegraphClient;
-
-    const result = await fileGet(mockClient, {
-      repo: 'github.com/test/repo',
-      path: 'src/index.ts',
-    });
-
-    expect(result).toBe('Error retrieving file: Connection timeout');
-  });
-
-  it('should handle permission denied errors', async () => {
-    const query = vi.fn().mockRejectedValue(new Error('Permission denied'));
-    const mockClient = { query } as unknown as SourcegraphClient;
-
-    const result = await fileGet(mockClient, {
-      repo: 'github.com/test/repo',
-      path: 'src/index.ts',
-    });
-
-    expect(result).toBe('Error retrieving file: Permission denied');
   });
 
   it('should handle completely malformed GraphQL responses', async () => {
