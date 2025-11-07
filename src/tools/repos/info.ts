@@ -71,7 +71,7 @@ export async function repoInfo(client: SourcegraphClient, params: RepoInfoParams
 
   try {
     const response = await client.query<RepoInfoResponse>(REPO_INFO_QUERY, { name });
-    const repository = response.repository;
+    const { repository } = response;
 
     if (!repository) {
       return `Repository not found: ${name}`;

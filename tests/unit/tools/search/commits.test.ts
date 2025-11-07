@@ -83,7 +83,7 @@ describe('searchCommits', () => {
       expect.any(String),
       expect.objectContaining({
         query: 'type:commit fix bug author:"John Smith" after:2024-01-01 before:2024-02-01 count:5',
-      })
+      }),
     );
   });
 
@@ -110,7 +110,7 @@ describe('searchCommits', () => {
       expect.any(String),
       expect.objectContaining({
         query: 'type:commit fix count:1',
-      })
+      }),
     );
   });
 

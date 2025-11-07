@@ -410,7 +410,7 @@ describe('searchCode', () => {
     } as unknown as SourcegraphClient;
 
     await expect(searchCode(mockClient, { query: 'test' })).rejects.toThrow(
-      'Code search failed: GraphQL query failed: boom'
+      'Code search failed: GraphQL query failed: boom',
     );
   });
 
@@ -420,7 +420,7 @@ describe('searchCode', () => {
     } as unknown as SourcegraphClient;
 
     await expect(searchCode(mockClient, { query: 'test' })).rejects.toThrow(
-      'Code search failed: boom'
+      'Code search failed: boom',
     );
   });
 
@@ -428,7 +428,7 @@ describe('searchCode', () => {
     const mockClient = { query: vi.fn() } as unknown as SourcegraphClient;
 
     await expect(searchCode(mockClient, { query: '   ' })).rejects.toThrow(
-      'Search query must not be empty.'
+      'Search query must not be empty.',
     );
   });
 });

@@ -63,7 +63,7 @@ describe('searchCode', () => {
       expect.any(String),
       expect.objectContaining({
         query: 'test count:5',
-      })
+      }),
     );
   });
 

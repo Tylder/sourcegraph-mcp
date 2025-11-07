@@ -75,7 +75,7 @@ describe('fileTree', () => {
         repo: 'github.com/test/repo',
         path: '',
         rev: 'HEAD',
-      })
+      }),
     );
     expect(result).toContain('Revision: HEAD');
     expect(result).toContain('Path: /');
@@ -108,7 +108,7 @@ describe('fileTree', () => {
       expect.any(String),
       expect.objectContaining({
         path: '',
-      })
+      }),
     );
     expect(result).toContain('Path: /');
   });
@@ -139,7 +139,7 @@ describe('fileTree', () => {
       expect.any(String),
       expect.objectContaining({
         path: '',
-      })
+      }),
     );
     expect(result).toContain('Path: /');
   });
@@ -170,7 +170,7 @@ describe('fileTree', () => {
       expect.any(String),
       expect.objectContaining({
         path: '',
-      })
+      }),
     );
     expect(result).toContain('Path: /');
   });
@@ -201,7 +201,7 @@ describe('fileTree', () => {
       expect.any(String),
       expect.objectContaining({
         path: 'docs',
-      })
+      }),
     );
     expect(result).toContain('Path: docs');
   });

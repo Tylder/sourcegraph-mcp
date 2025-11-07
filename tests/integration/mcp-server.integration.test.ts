@@ -28,9 +28,9 @@ interface JsonRpcResponse {
 class McpClient {
   private child: ReturnType<typeof spawn>;
   private requestId = 1;
-  private responsePromises = new Map<
+  private readonly responsePromises = new Map<
     number,
-    { resolve: (value: unknown) => void; reject: (error: Error) => void }
+    { resolve:(value: unknown) => void; reject: (error: Error) => void }
   >();
 
   constructor() {
@@ -89,7 +89,7 @@ class McpClient {
 
     return new Promise((resolve, reject) => {
       this.responsePromises.set(request.id, { resolve, reject });
-      this.child.stdin.write(JSON.stringify(request) + '\n');
+      this.child.stdin.write(`${JSON.stringify(request)}\n`);
     });
   }
 
@@ -178,7 +178,7 @@ describe('Sourcegraph MCP Server Integration Tests', () => {
         'file_blame',
         'repo_compare_commits',
         'repo_languages',
-      ])
+      ]),
     );
   }, 5000);
 
@@ -186,7 +186,7 @@ describe('Sourcegraph MCP Server Integration Tests', () => {
     const result = (await client.callTool('connection_test')) as {
       content: { type: string; text: string }[];
     };
-    const text = result.content[0].text;
+    const { text } = result.content[0];
     const parsed = tryParseJSON(text);
     expect(parsed).toHaveProperty('success', true);
     expect(parsed).toHaveProperty('details');
@@ -197,7 +197,7 @@ describe('Sourcegraph MCP Server Integration Tests', () => {
     const result = (await client.callTool('user_info')) as {
       content: { type: string; text: string }[];
     };
-    const text = result.content[0].text;
+    const { text } = result.content[0];
     const parsed = tryParseJSON(text);
     expect(parsed).toHaveProperty('username');
     expect(parsed).toHaveProperty('email');
@@ -207,7 +207,7 @@ describe('Sourcegraph MCP Server Integration Tests', () => {
     const result = (await client.callTool('repo_list', { first: 5 })) as {
       content: { type: string; text: string }[];
     };
-    const text = result.content[0].text;
+    const { text } = result.content[0];
     expect(text).toContain('Repository List');
     expect(text).toContain('github.com/Tylder/LaunchQuay');
   }, 10000);
@@ -216,7 +216,7 @@ describe('Sourcegraph MCP Server Integration Tests', () => {
     const result = (await client.callTool('repo_info', {
       name: 'github.com/Tylder/LaunchQuay',
     })) as { content: { type: string; text: string }[] };
-    const text = result.content[0].text;
+    const { text } = result.content[0];
     expect(text).toContain('github.com/Tylder/LaunchQuay');
     expect(text).toContain('Private');
   }, 10000);
@@ -226,7 +226,7 @@ describe('Sourcegraph MCP Server Integration Tests', () => {
       repo: 'github.com/Tylder/LaunchQuay',
       limit: 5,
     })) as { content: { type: string; text: string }[] };
-    const text = result.content[0].text;
+    const { text } = result.content[0];
     expect(text).toContain('github.com/Tylder/LaunchQuay');
     expect(text).toContain('master');
   }, 10000);
@@ -235,7 +235,7 @@ describe('Sourcegraph MCP Server Integration Tests', () => {
     const result = (await client.callTool('file_tree', {
       repo: 'github.com/Tylder/LaunchQuay',
     })) as { content: { type: string; text: string }[] };
-    const text = result.content[0].text;
+    const { text } = result.content[0];
     expect(text).toContain('github.com/Tylder/LaunchQuay');
     expect(text).toContain('Revision: HEAD');
   }, 10000);
@@ -245,7 +245,7 @@ describe('Sourcegraph MCP Server Integration Tests', () => {
       query: 'repo:github.com/Tylder/LaunchQuay function',
       limit: 3,
     })) as { content: { type: string; text: string }[] };
-    const text = result.content[0].text;
+    const { text } = result.content[0];
     expect(text).toContain('repo:github.com/Tylder/LaunchQuay function');
     expect(text).toContain('Result Count');
   }, 10000);

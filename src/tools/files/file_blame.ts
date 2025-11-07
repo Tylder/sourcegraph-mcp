@@ -98,7 +98,7 @@ function isValidHunk(hunk: BlameHunk): boolean {
 
 export async function fileBlame(
   client: SourcegraphClient,
-  params: FileBlameParams
+  params: FileBlameParams,
 ): Promise<string> {
   const { repo, path, rev, startLine, endLine } = params;
 
@@ -138,20 +138,20 @@ export async function fileBlame(
       return `Repository ${repo} not found.`;
     }
 
-    const commit = response.repository.commit;
+    const { commit } = response.repository;
     const revisionLabel = rev ?? 'HEAD';
 
     if (!commit) {
       return `Revision ${revisionLabel} not found in ${repo}.`;
     }
 
-    const blob = commit.blob;
+    const { blob } = commit;
 
     if (!blob) {
       return `File ${path} not found at ${revisionLabel} in ${repo}.`;
     }
 
-    const blame = blob.blame;
+    const { blame } = blob;
     const metadataLines: string[] = [
       `Repository: ${response.repository.name}`,
       `Repository URL: ${response.repository.url}`,
@@ -183,7 +183,7 @@ export async function fileBlame(
 
       for (let lineNumber = hunk.startLine; lineNumber <= hunk.endLine; lineNumber += 1) {
         metadataLines.push(
-          `${String(lineNumber)} | ${commitLabel} | ${author} | ${timestamp} | ${subject} | ${url}`
+          `${String(lineNumber)} | ${commitLabel} | ${author} | ${timestamp} | ${subject} | ${url}`,
         );
         hasLines = true;
       }

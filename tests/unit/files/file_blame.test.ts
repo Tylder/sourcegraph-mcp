@@ -65,13 +65,13 @@ describe('fileBlame', () => {
     expect(result).toContain('Revision Requested: main');
     expect(result).toContain('Line | Commit | Author | Date | Subject | URL');
     expect(result).toContain(
-      '1 | abcdef1 | Alice <alice@example.com> | 2024-01-01T00:00:00.000Z | Initial commit | https://example.com/commit/abcdef1'
+      '1 | abcdef1 | Alice <alice@example.com> | 2024-01-01T00:00:00.000Z | Initial commit | https://example.com/commit/abcdef1',
     );
     expect(result).toContain(
-      '2 | abcdef1 | Alice <alice@example.com> | 2024-01-01T00:00:00.000Z | Initial commit | https://example.com/commit/abcdef1'
+      '2 | abcdef1 | Alice <alice@example.com> | 2024-01-01T00:00:00.000Z | Initial commit | https://example.com/commit/abcdef1',
     );
     expect(result).toContain(
-      '3 | fedcba0987654321fedcba0987654321fedcba09 | bob@example.com <bob@example.com> | 2024-01-02T12:34:56.000Z | No subject | No URL'
+      '3 | fedcba0987654321fedcba0987654321fedcba09 | bob@example.com <bob@example.com> | 2024-01-02T12:34:56.000Z | No subject | No URL',
     );
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
@@ -235,7 +235,7 @@ describe('fileBlame', () => {
     });
 
     expect(result).toContain(
-      '5 | 1234567 | Unknown author | not-a-date | Refactor module | https://example.com/commit/1234567'
+      '5 | 1234567 | Unknown author | not-a-date | Refactor module | https://example.com/commit/1234567',
     );
   });
 

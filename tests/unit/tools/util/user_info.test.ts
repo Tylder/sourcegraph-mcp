@@ -42,7 +42,7 @@ describe('getUserInfo', () => {
     } as unknown as SourcegraphClient;
 
     await expect(getUserInfo(mockClient)).rejects.toThrow(
-      'Failed to fetch user info: No authenticated user found. Please check your access token.'
+      'Failed to fetch user info: No authenticated user found. Please check your access token.',
     );
   });
 
@@ -52,7 +52,7 @@ describe('getUserInfo', () => {
     } as unknown as SourcegraphClient;
 
     await expect(getUserInfo(mockClient)).rejects.toThrow(
-      'Failed to fetch user info: GraphQL request failed'
+      'Failed to fetch user info: GraphQL request failed',
     );
   });
 

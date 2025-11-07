@@ -89,7 +89,7 @@ const ensureQuery = (rawQuery: string): string => {
 };
 
 const mapLineMatches = (
-  matches: readonly GraphQLLineMatch[] | null | undefined
+  matches: readonly GraphQLLineMatch[] | null | undefined,
 ): SearchCodeLineMatch[] => {
   if (!matches || matches.length === 0) {
     return [];
@@ -103,8 +103,8 @@ const mapLineMatches = (
 };
 
 const mapFileMatch = (result: GraphQLFileMatch): SearchCodeFileMatch | null => {
-  const repository = result.repository;
-  const file = result.file;
+  const { repository } = result;
+  const { file } = result;
 
   if (!repository || !file) {
     return null;
@@ -120,7 +120,7 @@ const mapFileMatch = (result: GraphQLFileMatch): SearchCodeFileMatch | null => {
 };
 
 const mapCommitMatch = (result: GraphQLCommitMatch): SearchCodeCommitMatch | null => {
-  const commit = result.commit;
+  const { commit } = result;
 
   if (!commit) {
     return null;
@@ -142,7 +142,7 @@ const mapCommitMatch = (result: GraphQLCommitMatch): SearchCodeCommitMatch | nul
  */
 export async function searchCode(
   client: SourcegraphClient,
-  params: SearchCodeParams
+  params: SearchCodeParams,
 ): Promise<SearchCodeResult> {
   const query = ensureQuery(params.query);
   const limit = normaliseLimit(params.limit);
@@ -155,7 +155,7 @@ export async function searchCode(
       version,
     });
 
-    const results = response.search.results;
+    const { results } = response.search;
 
     const fileMatches: SearchCodeFileMatch[] = [];
     const repositoryMatches: SearchCodeRepositoryMatch[] = [];

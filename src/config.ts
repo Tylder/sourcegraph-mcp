@@ -16,7 +16,7 @@ export function getConfig(): Config {
   const timeout = parseInt(process.env.TIMEOUT_MS ?? '30000', 10);
   const logLevel = (process.env.LOG_LEVEL ?? 'info') as Config['logLevel'];
 
-  if (!accessToken) {
+  if (accessToken == null) {
     throw new Error('SRC_ACCESS_TOKEN environment variable is required');
   }
 

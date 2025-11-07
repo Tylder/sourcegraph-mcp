@@ -92,7 +92,7 @@ describe('repoList', () => {
         query: 'repo-pattern',
         after: 'cursor123',
         orderBy: { field: 'REPOSITORY_NAME', direction: 'ASC' },
-      })
+      }),
     );
   });
 
@@ -115,7 +115,7 @@ describe('repoList', () => {
       expect.any(String),
       expect.objectContaining({
         orderBy: { field: 'STARS', direction: 'DESC' },
-      })
+      }),
     );
   });
 

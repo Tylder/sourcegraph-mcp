@@ -18,7 +18,7 @@ vi.mock('graphql-request', () => {
 
     constructor(
       endpoint: string,
-      options: { headers: Record<string, string>; fetch: typeof fetch }
+      options: { headers: Record<string, string>; fetch: typeof fetch },
     ) {
       this.endpoint = endpoint;
       this.options = options;
@@ -95,7 +95,7 @@ describe('SourcegraphClient', () => {
     });
 
     await expect(client.query('query { test }')).rejects.toThrow(
-      'GraphQL query failed: network down'
+      'GraphQL query failed: network down',
     );
   });
 

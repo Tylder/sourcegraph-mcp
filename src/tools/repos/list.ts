@@ -84,7 +84,7 @@ function formatRepositoryStatus(repository: RepositoryNode): string | undefined 
     statuses.push('admin');
   }
 
-  const mirrorInfo = repository.mirrorInfo;
+  const { mirrorInfo } = repository;
   if (mirrorInfo) {
     if (!mirrorInfo.cloned) {
       statuses.push('not cloned');
@@ -120,7 +120,7 @@ export async function repoList(client: SourcegraphClient, params: RepoListParams
 
   try {
     const response = await client.query<RepositoryListResponse>(REPOSITORY_LIST_QUERY, variables);
-    const repositories = response.repositories;
+    const { repositories } = response;
 
     const summaryLines: string[] = [
       'Repository List',

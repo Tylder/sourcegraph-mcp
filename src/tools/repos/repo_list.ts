@@ -112,7 +112,7 @@ function formatRepositoryStatus(repository: RepositoryNode): string | undefined 
     statuses.push('admin');
   }
 
-  const mirrorInfo = repository.mirrorInfo;
+  const { mirrorInfo } = repository;
   if (mirrorInfo) {
     if (!mirrorInfo.cloned) {
       statuses.push('not cloned');

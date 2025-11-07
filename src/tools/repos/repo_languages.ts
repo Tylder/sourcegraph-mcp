@@ -51,7 +51,7 @@ export interface RepoLanguagesResult {
 }
 
 function supportsLanguageStatistics(
-  repository: RepoLanguagesRepository
+  repository: RepoLanguagesRepository,
 ): repository is RepositoryLanguageStatistics {
   return 'languageStatistics' in repository;
 }
@@ -132,7 +132,7 @@ function normalizeShares(languages: RepoLanguageBreakdown[]): RepoLanguageBreakd
     const adjustedRatio = clamp(
       roundToDecimals(language.share.ratio + ratioDifference, SHARE_RATIO_DECIMALS),
       0,
-      1
+      1,
     );
 
     normalized[indexToAdjust] = {
@@ -151,7 +151,7 @@ function normalizeShares(languages: RepoLanguageBreakdown[]): RepoLanguageBreakd
     const adjustedPercentage = clamp(
       roundToDecimals(language.share.percentage + percentageDifference, SHARE_PERCENT_DECIMALS),
       0,
-      100
+      100,
     );
 
     normalized[indexToAdjust] = {
@@ -169,7 +169,7 @@ function normalizeShares(languages: RepoLanguageBreakdown[]): RepoLanguageBreakd
 function buildBreakdown(
   repo: string,
   revision: string,
-  stats: LanguageStatisticNode[]
+  stats: LanguageStatisticNode[],
 ): RepoLanguagesResult {
   const sanitized = stats
     .filter((stat) => isFiniteNumber(stat.totalBytes) && stat.totalBytes >= 0)
@@ -200,7 +200,7 @@ function buildBreakdown(
 
 export async function repoLanguages(
   client: SourcegraphClient,
-  params: RepoLanguagesParams
+  params: RepoLanguagesParams,
 ): Promise<string> {
   const { repo } = params;
   const revision = params.rev ?? 'HEAD';
@@ -209,7 +209,7 @@ export async function repoLanguages(
     const response = await client.query<RepoLanguagesResponse>(REPO_LANGUAGES_QUERY as string, {
       name: repo,
     });
-    const repository = response.repository;
+    const { repository } = response;
 
     if (!repository) {
       return `Repository not found: ${repo}`;

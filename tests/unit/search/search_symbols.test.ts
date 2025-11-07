@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { searchSymbols, __testHooks } from '../../../src/tools/search/search_symbols.js';
+import { searchSymbols, __testHooks, type SearchSymbolsParams } from '../../../src/tools/search/search_symbols.js';
 import type { SourcegraphClient } from '../../../src/graphql/client.js';
-import type { SearchSymbolsParams } from '../../../src/tools/search/search_symbols.js';
 
 describe('searchSymbols', () => {
   it('builds the search query with type filters, limit, and cursor', async () => {
@@ -101,7 +100,7 @@ describe('searchSymbols', () => {
     expect(output).toContain('Repository: github.com/example/repo');
     expect(output).toContain('File: src/auth.ts');
     expect(output).toContain(
-      'URL: https://sourcegraph.com/github.com/example/repo/-/blob/src/auth.ts#L11:5'
+      'URL: https://sourcegraph.com/github.com/example/repo/-/blob/src/auth.ts#L11:5',
     );
     expect(output).toContain('Line: 11');
     expect(output).toContain('Column: 5');

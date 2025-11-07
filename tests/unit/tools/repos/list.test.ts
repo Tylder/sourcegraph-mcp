@@ -72,7 +72,7 @@ describe('repoList', () => {
         query: 'test',
         first: 20,
         after: 'cursor123',
-      })
+      }),
     );
   });
 

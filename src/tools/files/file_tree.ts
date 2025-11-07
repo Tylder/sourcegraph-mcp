@@ -110,7 +110,7 @@ async function fetchTreeEntries(
   client: SourcegraphClient,
   repo: string,
   revision: string,
-  path: string
+  path: string,
 ): Promise<{
   url: string;
   directories: FileTreeDirectoryEntry[];
@@ -123,19 +123,19 @@ async function fetchTreeEntries(
     rev: revision,
   });
 
-  const repository = response.repository;
+  const { repository } = response;
 
   if (!repository) {
     throw new FileTreeError('REPOSITORY_NOT_FOUND', `Repository not found: ${repo}`);
   }
 
-  const commit = repository.commit;
+  const { commit } = repository;
 
   if (!commit) {
     throw new FileTreeError('REVISION_NOT_FOUND', `Revision not found: ${revision}`);
   }
 
-  const tree = commit.tree;
+  const { tree } = commit;
 
   if (!tree) {
     const missingPath = path === '' ? '/' : path;
@@ -188,7 +188,7 @@ async function fetchTreeEntries(
 
 export async function getFileTree(
   client: SourcegraphClient,
-  params: FileTreeParams
+  params: FileTreeParams,
 ): Promise<FileTreeResult> {
   const { repo } = params;
   const revision = params.rev ?? 'HEAD';

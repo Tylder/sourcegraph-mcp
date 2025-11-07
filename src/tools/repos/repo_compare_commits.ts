@@ -75,29 +75,29 @@ const DEFAULT_DIFF_LIMIT = 20;
 const MAX_HUNK_LINES = 8;
 
 function resolveAuthor(author: CommitAuthor | null | undefined): string {
-  if (!author) return 'Unknown';
-  const person = author.person;
+  if (!author) {return 'Unknown';}
+  const { person } = author;
   const name = [person?.displayName, person?.name, person?.email]
     .map((value) => value?.trim())
     .find((value): value is string => Boolean(value && value.length > 0));
   const date = author.date?.trim();
-  if (name && date) return `${name} (${date})`;
-  if (name) return name;
-  if (date) return date;
+  if (name && date) {return `${name} (${date})`;}
+  if (name) {return name;}
+  if (date) {return date;}
   return 'Unknown';
 }
 
 function formatRange(range: ComparisonHunkRange | null | undefined, prefix: string): string {
-  if (range?.startLine == null) return `${prefix}∅`;
-  if (range.lines == null) return `${prefix}${range.startLine.toString()}`;
+  if (range?.startLine == null) {return `${prefix}∅`;}
+  if (range.lines == null) {return `${prefix}${range.startLine.toString()}`;}
   return `${prefix}${range.startLine.toString()},${range.lines.toString()}`;
 }
 
 function describeDiff(diff: ComparisonFileDiff): string {
   const { oldPath, newPath } = diff;
-  if (oldPath && newPath && oldPath !== newPath) return `renamed from ${oldPath} to ${newPath}`;
-  if (!oldPath && newPath) return `added ${newPath}`;
-  if (oldPath && !newPath) return `deleted ${oldPath}`;
+  if (oldPath && newPath && oldPath !== newPath) {return `renamed from ${oldPath} to ${newPath}`;}
+  if (!oldPath && newPath) {return `added ${newPath}`;}
+  if (oldPath && !newPath) {return `deleted ${oldPath}`;}
   const target = newPath ?? oldPath;
   return target ? `modified ${target}` : 'modified unknown file';
 }
@@ -180,7 +180,7 @@ function summariseCommit(commit: ComparisonCommit, index: number): string[] {
  */
 export async function repoCompareCommits(
   client: SourcegraphClient,
-  params: RepoCompareCommitsParams
+  params: RepoCompareCommitsParams,
 ): Promise<string> {
   const repo = params.repo.trim();
   const base = params.baseRev.trim();
@@ -209,14 +209,14 @@ export async function repoCompareCommits(
 
     const response = await client.query<RepoComparisonResponse>(
       REPO_COMPARISON_QUERY as string,
-      variables
+      variables,
     );
 
     if (!response.repository) {
       return `Repository not found: ${repo}`;
     }
 
-    const comparison = response.repository.comparison;
+    const { comparison } = response.repository;
 
     if (!comparison) {
       return `No comparison available between ${base} and ${head} in ${repo}.`;

@@ -88,7 +88,7 @@ describe('searchCommits', () => {
       COMMIT_SEARCH_QUERY,
       expect.objectContaining({
         query: expect.stringContaining('type:commit'),
-      })
+      }),
     );
 
     const queryString = queryMock.mock.calls[0][1].query;

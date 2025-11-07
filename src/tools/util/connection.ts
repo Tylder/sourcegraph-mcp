@@ -12,7 +12,7 @@ interface ConnectionTestResponse {
 }
 
 export async function testConnection(
-  client: SourcegraphClient
+  client: SourcegraphClient,
 ): Promise<{ success: boolean; message: string; details?: unknown }> {
   try {
     const response = await client.query<ConnectionTestResponse>(SITE_INFO_QUERY);

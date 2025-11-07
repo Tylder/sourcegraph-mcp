@@ -126,7 +126,7 @@ const SYMBOL_KIND_ALIASES: Record<string, string> = {
 };
 
 const normalizeTypeFilters = (
-  types: readonly string[] | undefined
+  types: readonly string[] | undefined,
 ): { accepted: string[]; ignored: string[] } => {
   if (!types) {
     return { accepted: [], ignored: [] };
@@ -175,7 +175,7 @@ const buildTypeFilter = (types: string[]): string | undefined => {
 
 const buildSearchQuery = (
   params: SearchSymbolsParams,
-  acceptedTypes: readonly string[]
+  acceptedTypes: readonly string[],
 ): { query: string; requested: number } => {
   const { query, limit = DEFAULT_LIMIT } = params;
   const segments: string[] = ['type:symbol'];
@@ -204,7 +204,7 @@ const toOneBased = (value: number | undefined | null): number | undefined => {
 
 const formatSymbolResult = (
   symbol: NonNullable<SymbolResultNode['symbol']>,
-  index: number
+  index: number,
 ): string[] => {
   const lines: string[] = [
     `Result ${(index + 1).toString()}:`,
@@ -218,7 +218,7 @@ const formatSymbolResult = (
     lines.push(`Container: ${symbol.containerName}`);
   }
 
-  const location = symbol.location;
+  const { location } = symbol;
   const repositoryName = location?.resource?.repository?.name;
   if (repositoryName) {
     lines.push(`Repository: ${repositoryName}`);
@@ -248,7 +248,7 @@ const formatSymbolResult = (
 
 export async function searchSymbols(
   client: SourcegraphClient,
-  params: SearchSymbolsParams
+  params: SearchSymbolsParams,
 ): Promise<string> {
   const { cursor } = params;
   const { accepted: acceptedTypes, ignored: ignoredTypes } = normalizeTypeFilters(params.types);
@@ -264,9 +264,9 @@ export async function searchSymbols(
   try {
     const response = await client.query<SymbolSearchResponse>(
       SYMBOL_SEARCH_QUERY as string,
-      variables
+      variables,
     );
-    const results = response.search.results;
+    const { results } = response.search;
     const summaryLines: string[] = ['Symbol Search Results', `Query: ${params.query}`];
 
     if (acceptedTypes.length > 0) {
@@ -295,14 +295,14 @@ export async function searchSymbols(
 
     const symbolResults = results.results.filter(
       (
-        result
+        result,
       ): result is SymbolResultNode & { symbol: NonNullable<SymbolResultNode['symbol']> } => {
         return (
           result.__typename === 'SymbolSearchResult' &&
           result.symbol !== null &&
           result.symbol !== undefined
         );
-      }
+      },
     );
 
     if (symbolResults.length === 0) {

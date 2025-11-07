@@ -50,7 +50,7 @@ const MAX_PAGE_SIZE = 50;
 
 export async function repoBranches(
   client: SourcegraphClient,
-  params: RepoBranchesParams
+  params: RepoBranchesParams,
 ): Promise<string> {
   const { repo } = params;
   const trimmedQuery = params.query?.trim();

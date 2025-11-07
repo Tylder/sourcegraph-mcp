@@ -51,7 +51,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 server.tool(
@@ -81,7 +81,7 @@ server.tool(
         ],
       };
     }
-  }
+  },
 );
 
 const searchCodeSchema: Record<string, ZodTypeAny> = {
@@ -113,7 +113,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const searchSymbolsSchema: Record<string, ZodTypeAny> = {
@@ -153,7 +153,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const searchCommitsSchema: Record<string, ZodTypeAny> = {
@@ -201,7 +201,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const repoListSchema: Record<string, ZodTypeAny> = {
@@ -233,7 +233,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const repoInfoSchema: Record<string, ZodTypeAny> = {
@@ -261,7 +261,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const repoBranchesSchema: Record<string, ZodTypeAny> = {
@@ -298,7 +298,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const fileTreeSchema: Record<string, ZodTypeAny> = {
@@ -325,7 +325,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const fileGetSchema: Record<string, ZodTypeAny> = {
@@ -352,7 +352,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const fileBlameSchema: Record<string, ZodTypeAny> = {
@@ -383,7 +383,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const repoCompareCommitsSchema: Record<string, ZodTypeAny> = {
@@ -410,7 +410,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 const repoLanguagesSchema: Record<string, ZodTypeAny> = {
@@ -436,7 +436,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 
 // Start server

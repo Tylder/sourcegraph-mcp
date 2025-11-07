@@ -68,7 +68,7 @@ describe('repoBranches', () => {
         name: 'repo',
         query: 'main',
         first: 15,
-      })
+      }),
     );
   });
 
@@ -90,7 +90,7 @@ describe('repoBranches', () => {
       expect.objectContaining({
         name: 'repo',
         query: 'feature/test',
-      })
+      }),
     );
   });
 

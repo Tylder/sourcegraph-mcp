@@ -63,13 +63,13 @@ describe('searchSymbols', () => {
       expect.any(String),
       expect.objectContaining({
         query: expect.stringContaining('type:symbol'),
-      })
+      }),
     );
     expect(mockClient.query).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         query: expect.stringContaining('symbol:function OR symbol:class'),
-      })
+      }),
     );
   });
 
@@ -141,7 +141,7 @@ describe('searchSymbols', () => {
       expect.any(String),
       expect.objectContaining({
         query: expect.stringContaining('count:5'),
-      })
+      }),
     );
   });
 

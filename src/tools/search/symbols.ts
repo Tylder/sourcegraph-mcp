@@ -38,7 +38,7 @@ export interface SearchSymbolsParams {
 
 export async function searchSymbols(
   client: SourcegraphClient,
-  params: SearchSymbolsParams
+  params: SearchSymbolsParams,
 ): Promise<string> {
   const { query, types = [], limit = 10 } = params;
 
@@ -57,7 +57,7 @@ export async function searchSymbols(
       query: searchQuery,
     });
 
-    const results = response.search.results;
+    const { results } = response.search;
 
     // Format results
     let output = `Search Query: ${query}\n`;

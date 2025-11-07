@@ -63,12 +63,12 @@ function formatAuthor(hunk: BlameHunk): string {
   const displayName = hunk.author?.person?.displayName?.trim();
   const email = hunk.author?.person?.email?.trim();
   const name = displayName ?? email ?? 'Unknown author';
-  const emailSuffix = email ? ` <${email}>` : '';
+  const emailSuffix = email != null ? ` <${email}>` : '';
   return `${name}${emailSuffix}`;
 }
 
 function formatDate(value: string | null | undefined): string {
-  if (!value) {
+  if (value == null || value === '') {
     return 'Unknown date';
   }
   const date = new Date(value);
@@ -77,7 +77,7 @@ function formatDate(value: string | null | undefined): string {
 
 export async function fileBlame(
   client: SourcegraphClient,
-  params: FileBlameParams
+  params: FileBlameParams,
 ): Promise<string> {
   const { repo, path, rev, startLine, endLine } = params;
 
@@ -107,20 +107,20 @@ export async function fileBlame(
       return `Repository ${repo} not found.`;
     }
 
-    const commit = response.repository.commit;
+    const { commit } = response.repository;
     const revisionLabel = rev ?? 'HEAD';
 
     if (!commit) {
       return `Revision ${revisionLabel} not found in ${repo}.`;
     }
 
-    const blob = commit.blob;
+    const { blob } = commit;
 
     if (!blob) {
       return `File ${path} not found at ${revisionLabel} in ${repo}.`;
     }
 
-    const blame = blob.blame;
+    const { blame } = blob;
     const metadataLines: string[] = [
       `Repository: ${response.repository.name}`,
       `Repository URL: ${response.repository.url}`,
@@ -143,12 +143,12 @@ export async function fileBlame(
       const author = formatAuthor(hunk);
       const timestamp = formatDate(hunk.author?.date);
       metadataLines.push(
-        `${String(hunk.startLine)}-${String(hunk.endLine)} | ${commitLabel} | ${author} | ${timestamp}`
+        `${String(hunk.startLine)}-${String(hunk.endLine)} | ${commitLabel} | ${author} | ${timestamp}`,
       );
-      if (subject && subject.length > 0) {
+      if (subject != null && subject.length > 0) {
         metadataLines.push(`  ${subject}`);
       }
-      if (commitInfo?.url) {
+      if (commitInfo?.url != null) {
         metadataLines.push(`  ${commitInfo.url}`);
       }
     }

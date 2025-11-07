@@ -6,7 +6,7 @@ import { GraphQLClient } from 'graphql-request';
 import type { Config } from '../config.js';
 
 export class SourcegraphClient {
-  private client: GraphQLClient;
+  private readonly client: GraphQLClient;
 
   constructor(config: Config) {
     const endpoint = `${config.endpoint}/.api/graphql`;
@@ -16,7 +16,7 @@ export class SourcegraphClient {
         Authorization: `token ${config.accessToken}`,
         'Content-Type': 'application/json',
       },
-      fetch: (url, options): Promise<Response> => {
+      fetch: async (url, options): Promise<Response> => {
         return fetch(url, {
           ...options,
           signal: AbortSignal.timeout(config.timeout),
@@ -39,7 +39,7 @@ export class SourcegraphClient {
   async queryWithErrorHandling<T>(
     query: string,
     defaultValue: T,
-    variables?: Record<string, unknown>
+    variables?: Record<string, unknown>,
   ): Promise<{ data: T; errors: string[] }> {
     try {
       const data = await this.query<T>(query, variables);

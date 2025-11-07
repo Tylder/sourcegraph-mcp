@@ -79,7 +79,7 @@ export const isFileMatchResult = (result: GraphQLSearchResult): result is GraphQ
 };
 
 export const isRepositoryMatchResult = (
-  result: GraphQLSearchResult
+  result: GraphQLSearchResult,
 ): result is GraphQLRepositoryMatch => {
   return result.__typename === 'Repository';
 };

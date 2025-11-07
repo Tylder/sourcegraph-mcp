@@ -138,7 +138,7 @@ describe('repoCompareCommits', () => {
     });
 
     expect(result).toBe(
-      'No comparison available between base and head in github.com/sourcegraph/example.'
+      'No comparison available between base and head in github.com/sourcegraph/example.',
     );
   });
 
@@ -173,7 +173,7 @@ describe('repoCompareCommits', () => {
   it('summarises varied commit and diff metadata', async () => {
     const repeatedBody = Array.from(
       { length: 10 },
-      (_, index) => `context line ${String(index + 1)}`
+      (_, index) => `context line ${String(index + 1)}`,
     ).join('\n');
     const mockClient = {
       query: vi.fn().mockResolvedValue({

@@ -28,8 +28,8 @@ describe('normalizeTreePath', () => {
 
 describe('getFileTree', () => {
   it('builds nested directory structures recursively', async () => {
-    const queryMock = vi.fn((_query: string, variables: { path: string }) => {
-      const path = variables.path;
+    const queryMock = vi.fn(async (_query: string, variables: { path: string }) => {
+      const { path } = variables;
 
       if (path === '') {
         return Promise.resolve({
@@ -170,7 +170,7 @@ describe('getFileTree', () => {
 
   it('surfaces file metadata and submodules from the tree', async () => {
     const queryMock = vi.fn(
-      (_query: string, variables: { path: string; repo: string; rev: string }) => {
+      async (_query: string, variables: { path: string; repo: string; rev: string }) => {
         expect(variables.repo).toBe('github.com/test/repo');
         expect(variables.rev).toBe('HEAD');
 
@@ -202,7 +202,7 @@ describe('getFileTree', () => {
             },
           },
         });
-      }
+      },
     );
 
     const client = { query: queryMock } as unknown as SourcegraphClient;
@@ -229,7 +229,7 @@ describe('getFileTree', () => {
   });
 
   it('handles directories with no entries', async () => {
-    const queryMock = vi.fn((_query: string, variables: { path: string; rev: string }) => {
+    const queryMock = vi.fn(async (_query: string, variables: { path: string; rev: string }) => {
       expect(variables.rev).toBe('feature');
       return Promise.resolve({
         repository: {
@@ -284,7 +284,7 @@ describe('getFileTree', () => {
     } as unknown as SourcegraphClient;
 
     await expect(
-      getFileTree(client, { repo: 'github.com/test/repo', rev: 'bad-commit' })
+      getFileTree(client, { repo: 'github.com/test/repo', rev: 'bad-commit' }),
     ).rejects.toMatchObject({
       code: 'REVISION_NOT_FOUND',
       message: 'Revision not found: bad-commit',
@@ -302,7 +302,7 @@ describe('getFileTree', () => {
     } as unknown as SourcegraphClient;
 
     await expect(
-      getFileTree(client, { repo: 'github.com/test/repo', path: 'missing' })
+      getFileTree(client, { repo: 'github.com/test/repo', path: 'missing' }),
     ).rejects.toMatchObject({
       code: 'PATH_NOT_FOUND',
       message: 'Path not found: missing',

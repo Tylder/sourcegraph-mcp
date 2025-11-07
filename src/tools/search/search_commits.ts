@@ -85,7 +85,7 @@ const formatHighlightedValue = (highlight?: HighlightedString | null): string | 
 
 export async function searchCommits(
   client: SourcegraphClient,
-  params: SearchCommitsParams
+  params: SearchCommitsParams,
 ): Promise<string> {
   const { query, author, after, before, limit = 20 } = params;
 
@@ -103,7 +103,7 @@ export async function searchCommits(
     filters.push(`before:${quoteIfNeeded(before)}`);
   }
 
-  const searchQuery = [`type:commit`, query, ...filters, `count:${limit.toString()}`]
+  const searchQuery = ['type:commit', query, ...filters, `count:${limit.toString()}`]
     .filter((segment) => segment.trim().length > 0)
     .join(' ');
 
@@ -112,7 +112,7 @@ export async function searchCommits(
       query: searchQuery,
     });
 
-    const results = response.search.results;
+    const { results } = response.search;
 
     const output: string[] = [];
     output.push(`Search Query: ${query}`);

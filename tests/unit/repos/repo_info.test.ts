@@ -67,7 +67,7 @@ describe('repoInfo handler', () => {
     } as unknown as SourcegraphClient;
 
     await expect(repoInfo(mockClient, { name: 'github.com/example/missing' })).rejects.toThrow(
-      'Repository not found: github.com/example/missing'
+      'Repository not found: github.com/example/missing',
     );
   });
 
@@ -210,7 +210,7 @@ describe('repoInfo handler', () => {
     await expect(
       repoInfo(mockClient, {
         name: 'github.com/example/error',
-      })
+      }),
     ).rejects.toThrow('Error fetching repository info: GraphQL request failed');
   });
 
@@ -222,7 +222,7 @@ describe('repoInfo handler', () => {
     await expect(
       repoInfo(mockClient, {
         name: 'github.com/example/unexpected-error',
-      })
+      }),
     ).rejects.toThrow('Error fetching repository info: timed out');
   });
 });

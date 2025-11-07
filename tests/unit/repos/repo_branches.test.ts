@@ -81,7 +81,7 @@ describe('repoBranches', () => {
         name: 'github.com/sourcegraph/sourcegraph',
         first: 5,
         query: 'feature',
-      })
+      }),
     );
     expect(queryMock).toHaveBeenNthCalledWith(
       2,
@@ -91,7 +91,7 @@ describe('repoBranches', () => {
         first: 2,
         query: 'feature',
         after: 'cursor-1',
-      })
+      }),
     );
 
     expect(result).toContain('Repository: github.com/sourcegraph/sourcegraph');

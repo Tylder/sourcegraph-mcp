@@ -1,9 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { repoLanguages, __internal } from '../../../src/tools/repos/repo_languages.js';
-import type {
-  RepoLanguageBreakdown,
-  RepoLanguagesResult,
-} from '../../../src/tools/repos/repo_languages.js';
+import { repoLanguages, __internal, type RepoLanguageBreakdown, type RepoLanguagesResult } from '../../../src/tools/repos/repo_languages.js';
 import type { SourcegraphClient } from '../../../src/graphql/client.js';
 
 describe('repoLanguages', () => {
@@ -56,13 +52,13 @@ describe('repoLanguages', () => {
 
     const totalRatio = parsed.languages.reduce(
       (sum: number, language: { share: { ratio: number } }) => sum + language.share.ratio,
-      0
+      0,
     );
     expect(totalRatio).toBeCloseTo(1, 6);
 
     const totalPercentage = parsed.languages.reduce(
       (sum: number, language: { share: { percentage: number } }) => sum + language.share.percentage,
-      0
+      0,
     );
     expect(totalPercentage).toBeCloseTo(100, 2);
 
@@ -317,7 +313,7 @@ describe('buildBreakdown', () => {
 
     const totalSharePercentage = breakdown.languages.reduce(
       (sum, language) => sum + language.share.percentage,
-      0
+      0,
     );
     expect(totalSharePercentage).toBeCloseTo(100, 2);
   });

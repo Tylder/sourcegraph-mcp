@@ -138,7 +138,7 @@ export function formatRepoInfo(result: RepoInfoResult): string {
 
 export async function repoInfo(
   client: SourcegraphClient,
-  params: RepoInfoParams
+  params: RepoInfoParams,
 ): Promise<RepoInfoResult> {
   let response: RepoInfoResponse;
 

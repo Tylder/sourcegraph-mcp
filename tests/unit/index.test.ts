@@ -41,7 +41,7 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
       name: string,
       description: string,
       schemaOrHandler: unknown,
-      maybeHandler?: unknown
+      maybeHandler?: unknown,
     ): void {
       const handler =
         typeof schemaOrHandler === 'function'

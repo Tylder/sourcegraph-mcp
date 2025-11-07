@@ -40,7 +40,7 @@ export interface SearchCodeParams {
 
 export async function searchCode(
   client: SourcegraphClient,
-  params: SearchCodeParams
+  params: SearchCodeParams,
 ): Promise<string> {
   const { query, limit = 10 } = params;
 
@@ -52,7 +52,7 @@ export async function searchCode(
       query: queryWithLimit,
     });
 
-    const results = response.search.results;
+    const { results } = response.search;
 
     // Format results for AI consumption
     let output = `Search Query: ${query}\n`;

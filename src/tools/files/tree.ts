@@ -76,7 +76,7 @@ export async function fileTree(client: SourcegraphClient, params: FileTreeParams
       return `Revision not found: ${revision}`;
     }
 
-    const tree = response.repository.commit.tree;
+    const { tree } = response.repository.commit;
     if (!tree) {
       return `Path not found: ${displayPath}`;
     }

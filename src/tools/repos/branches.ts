@@ -38,7 +38,7 @@ export interface RepoBranchesParams {
 
 export async function repoBranches(
   client: SourcegraphClient,
-  params: RepoBranchesParams
+  params: RepoBranchesParams,
 ): Promise<string> {
   const { repo, limit = 20 } = params;
   const trimmedQuery = params.query?.trim();

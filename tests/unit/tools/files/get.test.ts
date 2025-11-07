@@ -73,7 +73,7 @@ describe('fileGet', () => {
         repo: 'github.com/test/repo',
         path: 'bin/file',
         rev: 'HEAD',
-      })
+      }),
     );
   });
 
@@ -95,7 +95,7 @@ describe('fileGet', () => {
         repo: 'github.com/test/repo',
         path: 'src/index.ts',
         rev: 'HEAD',
-      })
+      }),
     );
   });
 
@@ -173,7 +173,7 @@ describe('fileGet', () => {
         repo: 'github.com/test/repo',
         path: 'README.md',
         rev: 'HEAD',
-      })
+      }),
     );
   });
 
@@ -239,7 +239,7 @@ describe('fileGet', () => {
         repo: 'github.com/test/repo',
         path: 'src/index.ts',
         rev: 'HEAD',
-      })
+      }),
     );
   });
 
@@ -285,7 +285,7 @@ describe('fileGet', () => {
         repo: 'github.com/test/repo',
         path: 'src/index.ts',
         rev: 'main',
-      })
+      }),
     );
   });
 });
