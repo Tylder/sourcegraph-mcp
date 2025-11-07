@@ -82,7 +82,7 @@ vi.mock('../../src/tools/repos/info.js', () => ({
   repoInfo: repoInfoMock,
 }));
 
-vi.mock('../../src/tools/repos/branches.js', () => ({
+vi.mock('../../src/tools/repos/repo_branches.js', () => ({
   repoBranches: repoBranchesMock,
 }));
 

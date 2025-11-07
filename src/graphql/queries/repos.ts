@@ -58,18 +58,19 @@ export const REPO_INFO_QUERY = `
 `;
 
 export const REPO_BRANCHES_QUERY = `
-  query RepoBranches($name: String!, $query: String, $first: Int!) {
+  query RepoBranches($name: String!, $query: String, $first: Int!, $after: String) {
     repository(name: $name) {
       name
       url
       defaultBranch {
         displayName
       }
-      branches(first: $first, query: $query) {
+      branches(first: $first, query: $query, after: $after) {
         nodes {
           name
           displayName
           abbrevName
+          abbreviatedName
           url
           target {
             oid
@@ -78,6 +79,7 @@ export const REPO_BRANCHES_QUERY = `
         }
         pageInfo {
           hasNextPage
+          endCursor
         }
       }
     }
