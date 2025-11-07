@@ -95,9 +95,6 @@ export const REPO_COMPARISON_QUERY = `
     repository(name: $name) {
       name
       comparison(base: $base, head: $head) {
-        range {
-          expression
-        }
         commits(first: $firstCommits) {
           nodes {
             oid
@@ -119,10 +116,8 @@ export const REPO_COMPARISON_QUERY = `
           nodes {
             oldPath
             newPath
-            isBinary
             stat {
               added
-              changed
               deleted
             }
             hunks {

@@ -9,9 +9,6 @@ describe('repoCompareCommits', () => {
         repository: {
           name: 'github.com/sourcegraph/example',
           comparison: {
-            range: {
-              expression: 'base..head',
-            },
             commits: {
               nodes: [
                 {
@@ -35,10 +32,8 @@ describe('repoCompareCommits', () => {
                 {
                   oldPath: 'README.md',
                   newPath: 'README.md',
-                  isBinary: false,
                   stat: {
                     added: 5,
-                    changed: 1,
                     deleted: 2,
                   },
                   hunks: [
@@ -66,12 +61,12 @@ describe('repoCompareCommits', () => {
     expect(result).toContain('Repository: github.com/sourcegraph/example');
     expect(result).toContain('Base Revision: base');
     expect(result).toContain('Head Revision: head');
-    expect(result).toContain('Range: base..head');
     expect(result).toContain('Commits: showing 1 of 1 total');
     expect(result).toContain('1. abcdef1 - Add awesome feature');
     expect(result).toContain('Author: Alice (2024-05-20T10:00:00Z)');
     expect(result).toContain('File Diffs: showing 1 of 1 total');
     expect(result).toContain('1. modified README.md');
+    expect(result).toContain('Stats: +5 -2');
     expect(result).toContain('Hunk 1: -1,5 +1,6');
     expect(result).toContain('@@ -1,5 +1,6 @@');
   });
@@ -185,7 +180,6 @@ describe('repoCompareCommits', () => {
         repository: {
           name: 'github.com/sourcegraph/complex',
           comparison: {
-            range: { expression: 'base..head' },
             commits: {
               nodes: [
                 {
@@ -232,7 +226,6 @@ describe('repoCompareCommits', () => {
                 {
                   oldPath: 'src/old.ts',
                   newPath: 'src/new.ts',
-                  isBinary: false,
                   stat: { added: 10, changed: 2, deleted: 1 },
                   hunks: [
                     {
@@ -245,21 +238,18 @@ describe('repoCompareCommits', () => {
                 {
                   oldPath: null,
                   newPath: 'docs/added.md',
-                  isBinary: false,
-                  stat: { added: 5, changed: 0, deleted: 0 },
+                  stat: { added: 5, deleted: 0 },
                   hunks: [],
                 },
                 {
                   oldPath: 'src/deleted.ts',
                   newPath: null,
-                  isBinary: true,
-                  stat: { added: 0, changed: 0, deleted: 7 },
+                  stat: { added: 0, deleted: 7 },
                   hunks: [],
                 },
                 {
                   oldPath: 'src/unchanged.ts',
                   newPath: 'src/unchanged.ts',
-                  isBinary: false,
                   stat: { added: 1, changed: 1, deleted: 1 },
                   hunks: [
                     {
@@ -272,7 +262,6 @@ describe('repoCompareCommits', () => {
                 {
                   oldPath: null,
                   newPath: null,
-                  isBinary: false,
                   stat: null,
                   hunks: [
                     {
@@ -317,13 +306,16 @@ describe('repoCompareCommits', () => {
     expect(result).toContain('context line 8');
     expect(result).toContain('…');
     expect(result).toContain('added docs/added.md');
-    expect(result).toContain('No diff hunks available.');
+    expect(result).toContain('Stats: +5 -0');
+    expect(result).toContain('No diff hunks available (file may be binary or diff omitted).');
     expect(result).toContain('deleted src/deleted.ts');
-    expect(result).toContain('Binary file diff omitted.');
+    expect(result).toContain('Stats: +0 -7');
+    expect(result).toContain('No diff hunks available (file may be binary or diff omitted).');
     expect(result).toContain('modified src/unchanged.ts');
     expect(result).toContain('Hunk 1: -∅ +42');
     expect(result).toContain('+new content');
     expect(result).toContain('modified unknown file');
+    expect(result).toContain('Stats: unavailable.');
     expect(result).toContain('@@ -0,0 +0,0 @@');
     expect(result).toContain('context without filename');
   });
@@ -334,7 +326,6 @@ describe('repoCompareCommits', () => {
         repository: {
           name: 'github.com/sourcegraph/empty',
           comparison: {
-            range: null,
             commits: { nodes: [], totalCount: 0 },
             fileDiffs: { nodes: [], totalCount: 0 },
           },
@@ -360,7 +351,6 @@ describe('repoCompareCommits', () => {
         repository: {
           name: 'github.com/sourcegraph/no-author',
           comparison: {
-            range: { expression: 'base..head' },
             commits: {
               nodes: [
                 {
