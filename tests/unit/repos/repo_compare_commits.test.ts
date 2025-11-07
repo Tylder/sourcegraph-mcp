@@ -379,4 +379,54 @@ describe('repoCompareCommits', () => {
 
     expect(result).toContain('Author: Unknown');
   });
+
+  it('handles unknown total counts gracefully', async () => {
+    const mockClient = {
+      query: vi.fn().mockResolvedValue({
+        repository: {
+          name: 'github.com/sourcegraph/unknown-totals',
+          comparison: {
+            commits: {
+              nodes: [
+                {
+                  oid: 'abcdef1234567890',
+                  abbreviatedOID: 'abcdef1',
+                  subject: 'Test commit',
+                  author: {
+                    person: {
+                      displayName: 'Test Author',
+                      email: 'test@example.com',
+                    },
+                    date: '2024-05-20T10:00:00Z',
+                  },
+                  url: 'https://sourcegraph.com/github.com/sourcegraph/unknown-totals@abcdef1',
+                },
+              ],
+              totalCount: null,
+            },
+            fileDiffs: {
+              nodes: [
+                {
+                  oldPath: 'test.txt',
+                  newPath: 'test.txt',
+                  stat: { added: 1, deleted: 0 },
+                  hunks: [],
+                },
+              ],
+              totalCount: undefined,
+            },
+          },
+        },
+      }),
+    } as unknown as SourcegraphClient;
+
+    const result = await repoCompareCommits(mockClient, {
+      repo: 'github.com/sourcegraph/unknown-totals',
+      baseRev: 'base',
+      headRev: 'head',
+    });
+
+    expect(result).toContain('Commits: showing 1 of unknown total');
+    expect(result).toContain('File Diffs: showing 1 of unknown total');
+  });
 });

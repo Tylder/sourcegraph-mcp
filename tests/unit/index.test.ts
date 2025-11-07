@@ -54,6 +54,15 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
       toolSchemas.set(name, schema);
       registeredDescriptions.set(name, description);
     }
+    registerTool(
+      name: string,
+      options: { title?: string; description?: string; inputSchema?: unknown },
+      handler: (args: unknown) => Promise<unknown>,
+    ): void {
+      toolHandlers.set(name, handler);
+      toolSchemas.set(name, options.inputSchema);
+      registeredDescriptions.set(name, options.description ?? '');
+    }
     connect = connectMock;
   },
 }));

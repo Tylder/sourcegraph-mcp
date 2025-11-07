@@ -96,13 +96,12 @@ function registerTool(
     }
   };
 
-  if (schema) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    server.tool(name, description, schema as any, toolHandler);
-  } else {
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    server.tool(name, description, toolHandler);
-  }
+  const options = {
+    title: name,
+    description,
+    ...(schema && { inputSchema: schema }),
+  };
+  server.registerTool(name, options, toolHandler);
 }
 
 // Register tools
