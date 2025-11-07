@@ -94,7 +94,7 @@ vi.mock('../../src/tools/files/get.js', () => ({
   fileGet: fileGetMock,
 }));
 
-vi.mock('../../src/tools/files/blame.js', () => ({
+vi.mock('../../src/tools/files/file_blame.js', () => ({
   fileBlame: fileBlameMock,
 }));
 
@@ -187,8 +187,20 @@ describe('index entrypoint', () => {
     await toolHandlers.get('file_get')?.({ repo: 'r', path: 'p', rev: 'v' });
     expect(fileGetMock).toHaveBeenCalledWith(expect.anything(), { repo: 'r', path: 'p', rev: 'v' });
 
-    await toolHandlers.get('file_blame')?.({ repo: 'r', path: 'p', rev: 'v' });
-    expect(fileBlameMock).toHaveBeenCalledWith(expect.anything(), { repo: 'r', path: 'p', rev: 'v' });
+    await toolHandlers.get('file_blame')?.({
+      repo: 'r',
+      path: 'p',
+      rev: 'v',
+      startLine: 1,
+      endLine: 10,
+    });
+    expect(fileBlameMock).toHaveBeenCalledWith(expect.anything(), {
+      repo: 'r',
+      path: 'p',
+      rev: 'v',
+      startLine: 1,
+      endLine: 10,
+    });
 
     consoleSpy.mockRestore();
   });

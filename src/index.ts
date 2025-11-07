@@ -18,7 +18,7 @@ import { repoInfo } from './tools/repos/info.js';
 import { repoBranches } from './tools/repos/branches.js';
 import { fileTree } from './tools/files/tree.js';
 import { fileGet } from './tools/files/get.js';
-import { fileBlame } from './tools/files/blame.js';
+import { fileBlame, type FileBlameParams } from './tools/files/file_blame.js';
 
 // Get and validate configuration
 const config = getConfig();
@@ -326,6 +326,18 @@ const fileBlameSchema: Record<string, ZodTypeAny> = {
   repo: z.string().describe('The repository name (e.g., "github.com/sourcegraph/sourcegraph")'),
   path: z.string().describe('File path within the repository (e.g., "src/index.ts")'),
   rev: z.string().optional().describe('Repository revision/branch (default: HEAD)'),
+  startLine: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe('1-based starting line number for blame results'),
+  endLine: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe('1-based ending line number for blame results'),
 };
 
 server.tool(
@@ -335,12 +347,8 @@ server.tool(
   fileBlameSchema as any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (args: any) => {
-    const { repo, path, rev } = args as { repo: string; path: string; rev?: string };
-    const typedFileBlame = fileBlame as (
-      client: SourcegraphClient,
-      variables: { repo: string; path: string; rev?: string }
-    ) => Promise<string>;
-    const result = await typedFileBlame(sgClient, { repo, path, rev });
+    const { repo, path, rev, startLine, endLine } = args as FileBlameParams;
+    const result = await fileBlame(sgClient, { repo, path, rev, startLine, endLine });
 
     return {
       content: [

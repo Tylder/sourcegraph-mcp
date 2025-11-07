@@ -61,7 +61,8 @@ interface FileBlameResponse {
   repository: FileBlameRepository | null;
 }
 
-const HEADER_SEPARATOR = '------------------------------------';
+const TABLE_HEADER = 'Line | Commit | Author | Date | Subject | URL';
+const HEADER_SEPARATOR = '-'.repeat(TABLE_HEADER.length);
 
 function formatAuthor(range: BlameRange): string {
   const displayName = range.author?.person?.displayName?.trim();
@@ -79,11 +80,41 @@ function formatDate(value: string | null | undefined): string {
   return Number.isNaN(date.getTime()) ? value : date.toISOString();
 }
 
+function formatSubject(subject: string | null | undefined): string {
+  if (!subject) {
+    return 'No subject';
+  }
+  const normalized = subject.replace(/\s+/g, ' ').trim();
+  return normalized.length > 0 ? normalized : 'No subject';
+}
+
+function formatUrl(url: string | null | undefined): string {
+  if (!url) {
+    return 'No URL';
+  }
+  const trimmed = url.trim();
+  return trimmed.length > 0 ? trimmed : 'No URL';
+}
+
+function isValidRange(range: BlameRange): boolean {
+  return Number.isFinite(range.startLine) && Number.isFinite(range.endLine);
+}
+
 export async function fileBlame(
   client: SourcegraphClient,
   params: FileBlameParams
 ): Promise<string> {
   const { repo, path, rev, startLine, endLine } = params;
+
+  if (
+    typeof startLine === 'number' &&
+    typeof endLine === 'number' &&
+    Number.isFinite(startLine) &&
+    Number.isFinite(endLine) &&
+    startLine > endLine
+  ) {
+    return 'Invalid blame range: startLine must be less than or equal to endLine.';
+  }
 
   const variables: {
     repo: string;
@@ -99,10 +130,10 @@ export async function fileBlame(
   if (rev) {
     variables.rev = rev;
   }
-  if (typeof startLine === 'number') {
+  if (typeof startLine === 'number' && Number.isFinite(startLine)) {
     variables.startLine = startLine;
   }
-  if (typeof endLine === 'number') {
+  if (typeof endLine === 'number' && Number.isFinite(endLine)) {
     variables.endLine = endLine;
   }
 
@@ -140,23 +171,32 @@ export async function fileBlame(
       return metadataLines.join('\n');
     }
 
-    metadataLines.push('', 'Line Range | Commit | Author | Date', HEADER_SEPARATOR);
+    metadataLines.push('', TABLE_HEADER, HEADER_SEPARATOR);
+
+    let hasLines = false;
 
     for (const range of blame.ranges) {
+      if (!isValidRange(range)) {
+        continue;
+      }
+
       const commitInfo = range.commit;
       const commitLabel = commitInfo?.abbreviatedOID ?? commitInfo?.oid ?? 'unknown';
-      const subject = commitInfo?.subject?.trim();
+      const subject = formatSubject(commitInfo?.subject);
+      const url = formatUrl(commitInfo?.url);
       const author = formatAuthor(range);
       const timestamp = formatDate(range.author?.date);
-      metadataLines.push(
-        `${String(range.startLine)}-${String(range.endLine)} | ${commitLabel} | ${author} | ${timestamp}`
-      );
-      if (subject && subject.length > 0) {
-        metadataLines.push(`  ${subject}`);
+
+      for (let lineNumber = range.startLine; lineNumber <= range.endLine; lineNumber += 1) {
+        metadataLines.push(
+          `${String(lineNumber)} | ${commitLabel} | ${author} | ${timestamp} | ${subject} | ${url}`
+        );
+        hasLines = true;
       }
-      if (commitInfo?.url) {
-        metadataLines.push(`  ${commitInfo.url}`);
-      }
+    }
+
+    if (!hasLines) {
+      metadataLines.push('No blame information available for the requested range.');
     }
 
     return metadataLines.join('\n');
