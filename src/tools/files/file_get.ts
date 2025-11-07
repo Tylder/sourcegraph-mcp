@@ -14,7 +14,7 @@ interface FileContentResponse {
       blob: {
         path: string | null;
         content: string | null;
-        byteSize: number;
+        byteSize: number | null;
         isBinary: boolean;
         highlight?: {
           aborted?: boolean;
@@ -32,9 +32,46 @@ export interface FileGetParams {
 }
 
 const UNKNOWN_LANGUAGE = 'unknown';
+const UNKNOWN_SIZE = 'unknown';
 
 function formatLanguage(language: string | null | undefined): string {
   return language?.trim() ? language : UNKNOWN_LANGUAGE;
+}
+
+function formatSize(byteSize: number | null | undefined): string {
+  return typeof byteSize === 'number' && Number.isFinite(byteSize)
+    ? `${byteSize.toString()} bytes`
+    : UNKNOWN_SIZE;
+}
+
+function buildMetadata({
+  repositoryName,
+  repositoryUrl,
+  requestedPath,
+  reportedPath,
+  revisionLabel,
+  revisionOid,
+  byteSize,
+  language,
+}: {
+  repositoryName: string;
+  repositoryUrl: string;
+  requestedPath: string;
+  reportedPath: string | null;
+  revisionLabel: string;
+  revisionOid: string;
+  byteSize: number | null | undefined;
+  language: string | null | undefined;
+}): string[] {
+  return [
+    `Repository: ${repositoryName}`,
+    `Repository URL: ${repositoryUrl}`,
+    `Path: ${reportedPath ?? requestedPath}`,
+    `Revision Requested: ${revisionLabel}`,
+    `Revision OID: ${revisionOid}`,
+    `Size: ${formatSize(byteSize)}`,
+    `Language: ${formatLanguage(language)}`,
+  ];
 }
 
 export async function fileGet(client: SourcegraphClient, params: FileGetParams): Promise<string> {
@@ -69,15 +106,16 @@ export async function fileGet(client: SourcegraphClient, params: FileGetParams):
       return `File ${path} not found at ${revisionLabel} in ${repo}.`;
     }
 
-    const metadataLines: string[] = [
-      `Repository: ${response.repository.name}`,
-      `Repository URL: ${response.repository.url}`,
-      `Path: ${blob.path ?? path}`,
-      `Revision Requested: ${revisionLabel}`,
-      `Revision OID: ${commit.oid}`,
-      `Size: ${blob.byteSize.toString()} bytes`,
-      `Language: ${formatLanguage(blob.highlight?.language)}`,
-    ];
+    const metadataLines = buildMetadata({
+      repositoryName: response.repository.name,
+      repositoryUrl: response.repository.url,
+      requestedPath: path,
+      reportedPath: blob.path,
+      revisionLabel,
+      revisionOid: commit.oid,
+      byteSize: blob.byteSize,
+      language: blob.highlight?.language,
+    });
 
     if (blob.highlight?.aborted) {
       metadataLines.push('Warning: Syntax highlighting was aborted due to timeout.');

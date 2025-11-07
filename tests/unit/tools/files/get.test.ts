@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fileGet } from '../../../../src/tools/files/get.js';
+import { fileGet } from '../../../../src/tools/files/file_get.js';
 import type { SourcegraphClient } from '../../../../src/graphql/client.js';
 
 describe('fileGet', () => {

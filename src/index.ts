@@ -17,7 +17,7 @@ import { repoList } from './tools/repos/list.js';
 import { repoInfo } from './tools/repos/info.js';
 import { repoBranches } from './tools/repos/branches.js';
 import { fileTree } from './tools/files/tree.js';
-import { fileGet } from './tools/files/get.js';
+import { fileGet } from './tools/files/file_get.js';
 import { fileBlame } from './tools/files/blame.js';
 
 // Get and validate configuration

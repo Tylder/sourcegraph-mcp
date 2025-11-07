@@ -90,7 +90,7 @@ vi.mock('../../src/tools/files/tree.js', () => ({
   fileTree: fileTreeMock,
 }));
 
-vi.mock('../../src/tools/files/get.js', () => ({
+vi.mock('../../src/tools/files/file_get.js', () => ({
   fileGet: fileGetMock,
 }));
 
