@@ -18,7 +18,6 @@ interface FileContentResponse {
         isBinary: boolean;
         highlight?: {
           aborted?: boolean;
-          language?: string | null;
         } | null;
       } | null;
     } | null;
@@ -31,12 +30,7 @@ export interface FileGetParams {
   rev?: string;
 }
 
-const UNKNOWN_LANGUAGE = 'unknown';
 const UNKNOWN_SIZE = 'unknown';
-
-function formatLanguage(language: string | null | undefined): string {
-  return language?.trim() ? language : UNKNOWN_LANGUAGE;
-}
 
 function formatSize(byteSize: number | null | undefined): string {
   return typeof byteSize === 'number' && Number.isFinite(byteSize)
@@ -52,7 +46,6 @@ function buildMetadata({
   revisionLabel,
   revisionOid,
   byteSize,
-  language,
 }: {
   repositoryName: string;
   repositoryUrl: string;
@@ -61,7 +54,6 @@ function buildMetadata({
   revisionLabel: string;
   revisionOid: string;
   byteSize: number | null | undefined;
-  language: string | null | undefined;
 }): string[] {
   return [
     `Repository: ${repositoryName}`,
@@ -70,21 +62,18 @@ function buildMetadata({
     `Revision Requested: ${revisionLabel}`,
     `Revision OID: ${revisionOid}`,
     `Size: ${formatSize(byteSize)}`,
-    `Language: ${formatLanguage(language)}`,
   ];
 }
 
 export async function fileGet(client: SourcegraphClient, params: FileGetParams): Promise<string> {
   const { repo, path, rev } = params;
+  const revisionLabel = rev ?? 'HEAD';
 
-  const variables: { repo: string; path: string; rev?: string } = {
+  const variables: { repo: string; path: string; rev: string } = {
     repo,
     path,
+    rev: revisionLabel,
   };
-
-  if (rev) {
-    variables.rev = rev;
-  }
 
   try {
     const response = await client.query<FileContentResponse>(FILE_CONTENT_QUERY, variables);
@@ -94,7 +83,6 @@ export async function fileGet(client: SourcegraphClient, params: FileGetParams):
     }
 
     const commit = response.repository.commit;
-    const revisionLabel = rev ?? 'HEAD';
 
     if (!commit) {
       return `Revision ${revisionLabel} not found in ${repo}.`;
@@ -114,7 +102,6 @@ export async function fileGet(client: SourcegraphClient, params: FileGetParams):
       revisionLabel,
       revisionOid: commit.oid,
       byteSize: blob.byteSize,
-      language: blob.highlight?.language,
     });
 
     if (blob.highlight?.aborted) {

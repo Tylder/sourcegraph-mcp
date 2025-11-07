@@ -26,7 +26,7 @@ describe('fileGet tool', () => {
             content: '# Hello\nWorld',
             byteSize: 13,
             isBinary: false,
-            highlight: { aborted: false, language: 'Markdown' },
+            highlight: { aborted: false },
           },
         },
       },
@@ -49,7 +49,6 @@ describe('fileGet tool', () => {
     expect(result).toContain('Revision Requested: main');
     expect(result).toContain('Revision OID: abcdef123456');
     expect(result).toContain('Size: 13 bytes');
-    expect(result).toContain('Language: Markdown');
     expect(result).toContain('# Hello');
     expect(result).toContain('World');
   });
@@ -66,7 +65,7 @@ describe('fileGet tool', () => {
             content: null,
             byteSize: 2048,
             isBinary: true,
-            highlight: { aborted: false, language: null },
+            highlight: { aborted: false },
           },
         },
       },
@@ -80,12 +79,12 @@ describe('fileGet tool', () => {
     expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('query FileContent'), {
       repo: 'github.com/sourcegraph/src-cli',
       path: 'bin/app',
+      rev: 'HEAD',
     });
 
     expect(result).toContain('Repository: github.com/sourcegraph/src-cli');
     expect(result).toContain('Revision Requested: HEAD');
     expect(result).toContain('Size: 2048 bytes');
-    expect(result).toContain('Language: unknown');
     expect(result).toMatch(/Warning: Binary file content is not displayed\.\n$/u);
   });
 
@@ -101,7 +100,7 @@ describe('fileGet tool', () => {
             content: 'console.log("hi")',
             byteSize: 42,
             isBinary: false,
-            highlight: { aborted: true, language: 'TypeScript' },
+            highlight: { aborted: true },
           },
         },
       },
@@ -110,6 +109,12 @@ describe('fileGet tool', () => {
     const result = await fileGet(client as SourcegraphClient, {
       repo: 'github.com/sourcegraph/sourcegraph',
       path: 'src/app.ts',
+    });
+
+    expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('query FileContent'), {
+      repo: 'github.com/sourcegraph/sourcegraph',
+      path: 'src/app.ts',
+      rev: 'HEAD',
     });
 
     expect(result).toContain('Warning: Syntax highlighting was aborted due to timeout.');
@@ -121,6 +126,12 @@ describe('fileGet tool', () => {
     const result = await fileGet(client as SourcegraphClient, {
       repo: 'github.com/sourcegraph/sourcegraph',
       path: 'README.md',
+    });
+
+    expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('query FileContent'), {
+      repo: 'github.com/sourcegraph/sourcegraph',
+      path: 'README.md',
+      rev: 'HEAD',
     });
 
     expect(result).toBe('Repository github.com/sourcegraph/sourcegraph not found.');
@@ -176,7 +187,7 @@ describe('fileGet tool', () => {
             content: null,
             byteSize: null,
             isBinary: false,
-            highlight: { aborted: false, language: 'Markdown' },
+            highlight: { aborted: false },
           },
         },
       },
