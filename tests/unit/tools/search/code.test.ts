@@ -1,10 +1,29 @@
+/**
+ * Tests for the searchCode MCP tool implementation.
+ *
+ * This test suite verifies the searchCode tool's ability to:
+ * - Format search results from GraphQL responses
+ * - Handle various search result scenarios (no results, limit hits, cloning repos, etc.)
+ * - Process error conditions gracefully
+ * - Apply search parameters correctly
+ * - Handle edge cases like malformed responses and Unicode content
+ *
+ * The tests use mocked GraphQL clients to isolate the tool logic from network dependencies.
+ */
+
 import { describe, it, expect, vi } from 'vitest';
 import { searchCode } from '../../../../src/tools/search/code.js';
 import type { SourcegraphClient } from '../../../../src/graphql/client.js';
 
 describe('searchCode', () => {
+  /**
+   * Tests basic search functionality including result formatting and parameter handling.
+   */
   describe('Basic Functionality', () => {
     it('should format search results correctly', async () => {
+      // Assumptions: GraphQL response contains properly structured search results
+      // with FileMatch results including repository and file information
+      // Expected behavior: Formats results with clear structure showing repo, file, and line matches
       const queryMock = vi.fn().mockResolvedValue({
         search: {
           results: {
@@ -45,6 +64,8 @@ describe('searchCode', () => {
     });
 
     it('should apply limit to query', async () => {
+      // Assumptions: Limit parameter is passed to the function
+      // Expected behavior: Appends "count:N" to the search query string
       const queryMock = vi.fn().mockResolvedValue({
         search: {
           results: {
@@ -84,6 +105,9 @@ describe('searchCode', () => {
     });
   });
 
+  /**
+   * Tests warning scenarios that may occur during search operations.
+   */
   describe('Warnings', () => {
     it('should warn about limit hit', async () => {
       const queryMock = vi.fn().mockResolvedValue({
@@ -140,6 +164,10 @@ describe('searchCode', () => {
     });
   });
 
+  /**
+   * Tests error handling for various failure scenarios including network errors,
+   * GraphQL errors, timeouts, and malformed responses.
+   */
   describe('Error Handling', () => {
     it.each([
       { error: new Error('GraphQL error'), expectedMessage: 'Error searching code: GraphQL error' },
@@ -162,6 +190,10 @@ describe('searchCode', () => {
     });
   });
 
+  /**
+   * Tests edge cases and special scenarios including malformed responses,
+   * Unicode content, large datasets, and unusual data structures.
+   */
   describe('Edge Cases and Special Cases', () => {
     it('should handle results without line matches', async () => {
       const queryMock = vi.fn().mockResolvedValue({
@@ -311,15 +343,18 @@ describe('searchCode', () => {
     });
 
     it('should skip non-FileMatch results', async () => {
+      // Test filtering logic: only FileMatch results should be displayed
+      // CommitMatch and other result types should be ignored
+      // This ensures clean output focused on code search results
       const queryMock = vi.fn().mockResolvedValue({
         search: {
           results: {
             results: [
               {
-                __typename: 'CommitMatch',
+                __typename: 'CommitMatch', // This should be filtered out
               },
               {
-                __typename: 'FileMatch',
+                __typename: 'FileMatch', // This should be displayed
                 file: {
                   path: 'test.ts',
                   url: '/repo/-/blob/test.ts',
@@ -330,7 +365,7 @@ describe('searchCode', () => {
                 },
               },
             ],
-            matchCount: 2,
+            matchCount: 2, // Total count includes both types
             limitHit: false,
           },
         },
@@ -339,11 +374,11 @@ describe('searchCode', () => {
 
       const result = await searchCode(mockClient, { query: 'test' });
 
-      expect(result).toContain('Result Count: 2');
+      expect(result).toContain('Result Count: 2'); // Total count shown
       // First result is skipped (CommitMatch), so FileMatch becomes Result 2
-      expect(result).toContain('Result 2:');
-      expect(result).toContain('File: test.ts');
-      expect(result).not.toContain('Result 1:');
+      expect(result).toContain('Result 2:'); // Only FileMatch gets numbered
+      expect(result).toContain('File: test.ts'); // FileMatch content displayed
+      expect(result).not.toContain('Result 1:'); // No Result 1 since CommitMatch was skipped
     });
   });
 });

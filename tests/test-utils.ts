@@ -21,7 +21,24 @@ import { CONNECTION_QUERY } from '../src/graphql/queries/connection.js';
 import { USER_QUERY } from '../src/graphql/queries/user.js';
 
 /**
- * Test utilities for creating consistent mock data across tests
+ * Comprehensive test utilities for Sourcegraph MCP Server testing.
+ *
+ * This module provides:
+ * - Mock data factories for repositories, files, commits, and search results
+ * - Advanced mock clients with GraphQL query verification
+ * - Network simulation utilities for testing various conditions
+ * - State management for complex multi-step test scenarios
+ * - Schema validation to prevent test data drift
+ *
+ * All utilities are designed to work together to create robust, maintainable tests
+ * that isolate business logic from external dependencies.
+ */
+
+/**
+ * Mock data factories for creating consistent test data.
+ *
+ * These factories provide realistic mock data that matches the GraphQL schema
+ * and can be customized with overrides for specific test scenarios.
  */
 
 // Repository mock data factories
@@ -44,6 +61,17 @@ export interface MockRepository {
   updatedAt: string;
 }
 
+/**
+ * Creates a mock repository object with realistic default values.
+ *
+ * @param overrides - Properties to override in the mock repository
+ * @returns A complete mock repository object
+ *
+ * @example
+ * ```typescript
+ * const repo = createMockRepository({ isPrivate: true });
+ * ```
+ */
 export const createMockRepository = (overrides: Partial<MockRepository> = {}): MockRepository => ({
   name: 'github.com/test/repo',
   description: 'Test repository',

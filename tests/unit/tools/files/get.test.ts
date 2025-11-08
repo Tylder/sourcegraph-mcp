@@ -1,3 +1,17 @@
+/**
+ * Tests for the fileGet MCP tool implementation.
+ *
+ * This test suite verifies the fileGet tool's ability to:
+ * - Retrieve and format file content from GraphQL responses
+ * - Handle various file types (text, binary, empty, large files)
+ * - Process different revision specifications (HEAD, branch names, commit hashes)
+ * - Handle error conditions (missing files, network errors, permission issues)
+ * - Validate response formatting and metadata display
+ *
+ * The tests ensure proper handling of edge cases like binary files, syntax highlighting,
+ * and various GraphQL response structures.
+ */
+
 import { describe, it, expect, vi } from 'vitest';
 import { fileGet } from '../../../../src/tools/files/file_get.js';
 import type { SourcegraphClient } from '../../../../src/graphql/client.js';

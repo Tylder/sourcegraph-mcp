@@ -1,3 +1,17 @@
+/**
+ * Tests for the repoInfo MCP tool implementation.
+ *
+ * This test suite verifies the repoInfo tool's ability to:
+ * - Format repository information from GraphQL responses
+ * - Handle various repository states (private, forked, archived, cloning)
+ * - Display repository metadata (description, branches, stats, clone status)
+ * - Process error conditions gracefully
+ * - Validate response schema and performance expectations
+ *
+ * The tests use mocked GraphQL clients and factory functions to create
+ * consistent test data and isolate the tool logic from network dependencies.
+ */
+
 import { describe, it, expect, vi } from 'vitest';
 import { repoInfo } from '../../../../src/tools/repos/info.js';
 import type { SourcegraphClient } from '../../../../src/graphql/client.js';
@@ -11,6 +25,10 @@ import {
 
 describe('repoInfo', () => {
   it('should format repository information correctly', async () => {
+    // Assumptions: GraphQL response contains complete repository data
+    // with all required fields (name, description, visibility, etc.)
+    // Expected behavior: Formats repository info in structured text format
+    // with clear labels and proper handling of all repository states
     const mockRepository = createMockRepository({
       isFork: true,
     });

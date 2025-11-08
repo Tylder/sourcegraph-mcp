@@ -2,6 +2,41 @@
 
 This document outlines the test organization, naming conventions, and best practices for the Sourcegraph MCP Server test suite.
 
+## Environment Requirements
+
+### Prerequisites
+
+- **Node.js**: Version 22.0.0 or higher (matches production requirements)
+- **npm**: Latest version (included with Node.js)
+- **Git**: For version control and pre-commit hooks
+
+### Environment Variables
+
+The following environment variables are required for integration tests:
+
+- `SRC_ACCESS_TOKEN`: Sourcegraph access token for API access
+- `SRC_ENDPOINT`: Sourcegraph instance URL (optional, defaults to https://sourcegraph.com)
+
+### Getting a Sourcegraph Access Token
+
+1. Log in to your Sourcegraph instance
+2. Go to User Settings → Access Tokens
+3. Create a new token with appropriate permissions
+4. Set the token as `SRC_ACCESS_TOKEN` environment variable
+
+```bash
+export SRC_ACCESS_TOKEN="your_token_here"
+```
+
+### Test Dependencies
+
+The test suite depends on:
+
+- **Vitest**: Test runner and framework
+- **@vitest/coverage-v8**: Code coverage reporting
+- **GraphQL queries**: Located in `src/graphql/queries/`
+- **Mock utilities**: Comprehensive test helpers in `tests/test-utils.ts`
+
 ## Test Categories
 
 ### Directory Structure
@@ -502,4 +537,88 @@ Tests run automatically on:
 - Pushes to main branch
 - Tagged releases
 
-Coverage thresholds are enforced in CI.</content>
+Coverage thresholds are enforced in CI.
+
+## Troubleshooting
+
+### Integration Tests Failing
+
+**Problem**: Integration tests are being skipped or failing.
+
+**Solutions**:
+1. **Check environment variables**:
+   ```bash
+   echo $SRC_ACCESS_TOKEN  # Should not be empty
+   echo $SRC_ENDPOINT     # Should point to valid Sourcegraph instance
+   ```
+
+2. **Verify token permissions**:
+   - Ensure the access token has read permissions for repositories
+   - Check token expiration date
+   - Try regenerating the token
+
+3. **Network connectivity**:
+   ```bash
+   curl -H "Authorization: token $SRC_ACCESS_TOKEN" $SRC_ENDPOINT/.api/graphql
+   ```
+
+### Mock Data Issues
+
+**Problem**: Tests failing due to mock data inconsistencies.
+
+**Solutions**:
+1. **Validate mock data structure**:
+   ```typescript
+   import { validateMockRepository } from '../test-utils';
+   const mockRepo = createMockRepository();
+   validateMockRepository(mockRepo); // Throws if invalid
+   ```
+
+2. **Check GraphQL query compatibility**:
+   - Ensure mock responses match actual GraphQL query structures
+   - Use `createVerifiedMockClient` to verify query execution
+
+### Coverage Issues
+
+**Problem**: Coverage reports are inconsistent or below thresholds.
+
+**Solutions**:
+1. **Check coverage configuration** in `vitest.config.ts`
+2. **Exclude test files** from coverage calculations
+3. **Verify source maps** are enabled for accurate reporting
+
+### Performance Issues
+
+**Problem**: Tests are running slowly.
+
+**Solutions**:
+1. **Run tests in parallel**: `npm run test:coverage`
+2. **Use mocks instead of real network calls** for faster execution
+3. **Check for resource leaks** in test setup/teardown
+
+## Test Dependencies
+
+### External Dependencies
+
+- **Sourcegraph API**: GraphQL endpoint for integration tests
+- **Access Token**: Valid authentication token with repository read permissions
+
+### Internal Dependencies
+
+- **GraphQL Queries**: Located in `src/graphql/queries/`
+  - `SEARCH_QUERY`, `COMMIT_SEARCH_QUERY`, `CODE_SEARCH_QUERY`, `SYMBOL_SEARCH_QUERY`
+  - `REPO_QUERY`, `FILE_QUERY`, `FILE_TREE_QUERY`, `BLAME_QUERY`
+  - `CONNECTION_QUERY`, `USER_QUERY`
+
+- **Test Utilities**: Comprehensive helpers in `tests/test-utils.ts`
+  - Mock data factories for all entity types
+  - Network simulation utilities
+  - Validation and verification helpers
+  - State management for complex scenarios
+
+### Development Dependencies
+
+- **Vitest**: Test framework and runner
+- **@vitest/coverage-v8**: Code coverage reporting
+- **TypeScript**: Type checking for tests
+- **ESLint**: Code linting for test files</content>
