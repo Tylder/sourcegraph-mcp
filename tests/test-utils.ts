@@ -2,8 +2,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { vi } from 'vitest';
 import type { SourcegraphClient } from '../src/graphql/client.js';
+import {
+  SEARCH_QUERY,
+  COMMIT_SEARCH_QUERY,
+  CODE_SEARCH_QUERY,
+  SYMBOL_SEARCH_QUERY,
+} from '../src/graphql/queries/search.js';
+import { REPO_QUERY } from '../src/graphql/queries/repos.js';
+import { FILE_QUERY } from '../src/graphql/queries/file.js';
+import { FILE_TREE_QUERY } from '../src/graphql/queries/file-tree.js';
+import { BLAME_QUERY } from '../src/graphql/queries/blame.js';
+import { CONNECTION_QUERY } from '../src/graphql/queries/connection.js';
+import { USER_QUERY } from '../src/graphql/queries/user.js';
 
 /**
  * Test utilities for creating consistent mock data across tests
@@ -76,6 +91,61 @@ export const createMockCloningRepository = () =>
     },
   });
 
+// Advanced mock builders for edge cases and scenarios
+export const createMockRepositoryWithScenarios = () => ({
+  // Standard repository
+  standard: createMockRepository(),
+
+  // Private repository
+  private: createMockRepository({ isPrivate: true }),
+
+  // Forked repository
+  forked: createMockRepository({ isFork: true }),
+
+  // Archived repository
+  archived: createMockRepository({ isArchived: true }),
+
+  // Repository with no description
+  noDescription: createMockRepository({ description: '' }),
+
+  // Repository with very long description
+  longDescription: createMockRepository({
+    description: `${'A'.repeat(500)} very long repository description that exceeds normal limits and tests edge cases for text handling.`,
+  }),
+
+  // Repository with Unicode characters
+  unicode: createMockRepository({
+    name: 'github.com/tëst/répôt',
+    description: 'Repository with Unicode: àáâãäå, 🌍, 世界',
+  }),
+
+  // Repository with special characters
+  specialChars: createMockRepository({
+    name: 'github.com/test-repo_special.chars',
+    description:
+      'Description with <script>alert("xss")</script> and other special chars: @#$%^&*()',
+  }),
+
+  // Repository with missing fields
+  incomplete: {
+    name: 'github.com/incomplete/repo',
+    url: 'https://sourcegraph.com/github.com/incomplete/repo',
+    isPrivate: false,
+    isFork: false,
+    isArchived: false,
+    mirrorInfo: null,
+    defaultBranch: null,
+    viewerCanAdminister: false,
+    updatedAt: null,
+  },
+
+  // Repository with extreme values
+  extreme: createMockRepository({
+    name: 'a'.repeat(200), // Very long repo name
+    description: 'z'.repeat(1000), // Very long description
+  }),
+});
+
 // File mock data factories
 export interface MockFile {
   path: string;
@@ -119,6 +189,61 @@ export const createMockEmptyFile = () =>
     content: '',
     byteSize: 0,
   });
+
+// Advanced file mock builders for edge cases
+export const createMockFileWithScenarios = () => ({
+  // Standard file
+  standard: createMockFile(),
+
+  // Binary file
+  binary: createMockBinaryFile(),
+
+  // Large file
+  large: createMockLargeFile(),
+
+  // Empty file
+  empty: createMockEmptyFile(),
+
+  // File with special characters in path
+  specialPath: createMockFile({
+    path: 'src/file with spaces & special-chars_(test).js',
+    content: 'console.log("special file");',
+    byteSize: 30,
+  }),
+
+  // File with Unicode content
+  unicode: createMockFile({
+    path: 'src/unicode.js',
+    content: 'console.log("Hello 世界 🌍 àáâãäå");',
+    byteSize: 40,
+  }),
+
+  // Very large file (simulate memory issues)
+  veryLarge: createMockFile({
+    path: 'huge-file.dat',
+    content: 'x'.repeat(100000), // 100KB file
+    byteSize: 100000,
+  }),
+
+  // File with null content (edge case)
+  nullContent: createMockFile({
+    content: null,
+    byteSize: 100,
+    isBinary: false,
+  }),
+
+  // File with highlighting aborted
+  highlightAborted: createMockFile({
+    highlight: { aborted: true },
+  }),
+
+  // File with extremely long path
+  longPath: createMockFile({
+    path: 'very/deep/nested/directory/structure/with/a/file/name/that/is/extremely/long/and/might/cause/issues/with/path/handling/length/limits/test.js',
+    content: 'console.log("deep file");',
+    byteSize: 25,
+  }),
+});
 
 // Commit mock data factories
 export const createMockCommit = (overrides: Partial<any> = {}) => ({
@@ -214,6 +339,115 @@ export const createMockSearchResults = (overrides: Partial<any> = {}) => ({
     ...overrides.results,
   },
   ...overrides,
+});
+
+// Advanced search result mock builders for edge cases
+export const createMockSearchResultsWithScenarios = () => ({
+  // Standard search results
+  standard: createMockSearchResults(),
+
+  // No results
+  empty: createMockSearchResults({
+    results: {
+      results: [],
+      matchCount: 0,
+      limitHit: false,
+    },
+  }),
+
+  // Limit hit
+  limitHit: createMockSearchResults({
+    results: {
+      results: Array.from({ length: 100 }, () => createMockFileMatch()),
+      matchCount: 1000,
+      limitHit: true,
+    },
+  }),
+
+  // Cloning repositories
+  cloning: createMockSearchResults({
+    results: {
+      results: [],
+      matchCount: 0,
+      limitHit: false,
+      cloning: [{ name: 'repo1' }, { name: 'repo2' }, { name: 'repo3' }],
+    },
+  }),
+
+  // Timed out repositories
+  timedOut: createMockSearchResults({
+    results: {
+      results: [],
+      matchCount: 0,
+      limitHit: false,
+      timedout: [{ name: 'slow-repo-1' }, { name: 'slow-repo-2' }],
+    },
+  }),
+
+  // Mixed results (FileMatch and CommitMatch)
+  mixed: createMockSearchResults({
+    results: {
+      results: [
+        createMockFileMatch(),
+        {
+          __typename: 'CommitMatch',
+          commit: createMockCommit(),
+          repository: {
+            name: 'github.com/test/repo',
+            url: '/github.com/test/repo',
+          },
+        },
+      ],
+      matchCount: 2,
+      limitHit: false,
+    },
+  }),
+
+  // Results with Unicode content
+  unicode: createMockSearchResults({
+    results: {
+      results: [
+        createMockFileMatch({
+          file: { path: 'src/unicode.js' },
+          lineMatches: [
+            {
+              lineNumber: 1,
+              offsetAndLengths: [[0, 10]],
+              preview: 'console.log("世界 🌍");',
+            },
+          ],
+        }),
+      ],
+      matchCount: 1,
+      limitHit: false,
+    },
+  }),
+
+  // Very large result set
+  large: createMockSearchResults({
+    results: {
+      results: Array.from({ length: 1000 }, (_, i) =>
+        createMockFileMatch({
+          file: { path: `file-${i}.ts` },
+        }),
+      ),
+      matchCount: 5000,
+      limitHit: true,
+    },
+  }),
+
+  // Results without line matches
+  noLineMatches: createMockSearchResults({
+    results: {
+      results: [
+        createMockFileMatch({
+          lineMatches: [],
+        }),
+      ],
+      matchCount: 1,
+      limitHit: false,
+    },
+  }),
 });
 
 // User mock data factories
@@ -409,6 +643,493 @@ export const createTestSetup = () => {
     },
   };
 };
+
+// Mock verification helpers
+export const createVerifiedMockClient = (expectedQuery: string, response?: any) => {
+  const queryMock = vi.fn().mockImplementation(async (query) => {
+    // Verify the correct GraphQL query is being used
+    if (query !== expectedQuery) {
+      throw new Error(`Expected query:\n${expectedQuery}\n\nActual query:\n${query}`);
+    }
+    return response !== undefined ? Promise.resolve(response) : Promise.resolve({});
+  });
+
+  return {
+    query: queryMock,
+    mockClient: { query: queryMock } as unknown as SourcegraphClient,
+    queryMock,
+    verifyCalledWith: (expectedVariables?: any) => {
+      if (expectedVariables) {
+        expect(queryMock).toHaveBeenCalledWith(expectedQuery, expectedVariables);
+      } else {
+        expect(queryMock).toHaveBeenCalledWith(expectedQuery, expect.any(Object));
+      }
+    },
+  };
+};
+
+// Network simulation helpers
+export const createDelayMockClient = (response: any, delayMs: number) => {
+  const queryMock = vi.fn().mockImplementation(
+    async () =>
+      new Promise((resolve) =>
+        setTimeout(() => {
+          resolve(response);
+        }, delayMs),
+      ),
+  );
+  return {
+    query: queryMock,
+    mockClient: { query: queryMock } as unknown as SourcegraphClient,
+    queryMock,
+  };
+};
+
+export const createIntermittentFailureMockClient = (
+  response: any,
+  failureRate = 0.3, // 30% failure rate
+  failureError: Error = new Error('Network error'),
+) => {
+  const queryMock = vi.fn().mockImplementation(async () => {
+    if (Math.random() < failureRate) {
+      return Promise.reject(failureError);
+    }
+    return Promise.resolve(response);
+  });
+
+  return {
+    query: queryMock,
+    mockClient: { query: queryMock } as unknown as SourcegraphClient,
+    queryMock,
+    getFailureRate: () => failureRate,
+    getCallStats: () => ({
+      total: queryMock.mock.calls.length,
+      failures: queryMock.mock.results.filter((r) => r.type === 'throw').length,
+    }),
+  };
+};
+
+export const createProgressiveDelayMockClient = (
+  response: any,
+  initialDelayMs = 100,
+  delayIncrementMs = 200,
+  maxDelayMs = 5000,
+) => {
+  let currentDelay = initialDelayMs;
+
+  const queryMock = vi.fn().mockImplementation(async () => {
+    const delay = currentDelay;
+    currentDelay = Math.min(currentDelay + delayIncrementMs, maxDelayMs);
+    return new Promise((resolve) =>
+      setTimeout(() => {
+        resolve(response);
+      }, delay),
+    );
+  });
+
+  return {
+    query: queryMock,
+    mockClient: { query: queryMock } as unknown as SourcegraphClient,
+    queryMock,
+    resetDelay: () => {
+      currentDelay = initialDelayMs;
+    },
+    getCurrentDelay: () => currentDelay,
+  };
+};
+
+export const createTimeoutMockClient = (timeoutMs = 30000) => {
+  const queryMock = vi.fn().mockImplementation(
+    async () =>
+      new Promise((_, reject) =>
+        setTimeout(() => {
+          reject(new Error('Request timeout'));
+        }, timeoutMs),
+      ),
+  );
+
+  return {
+    query: queryMock,
+    mockClient: { query: queryMock } as unknown as SourcegraphClient,
+    queryMock,
+    timeoutMs,
+  };
+};
+
+export const createNetworkErrorMockClient = (
+  errorType: 'timeout' | 'connection' | 'dns' | 'ssl' = 'connection',
+) => {
+  const errorMessages = {
+    timeout: 'Request timeout',
+    connection: 'Connection refused',
+    dns: 'DNS resolution failed',
+    ssl: 'SSL certificate error',
+  };
+
+  const queryMock = vi.fn().mockRejectedValue(new Error(errorMessages[errorType]));
+
+  return {
+    query: queryMock,
+    mockClient: { query: queryMock } as unknown as SourcegraphClient,
+    queryMock,
+    errorType,
+  };
+};
+
+// Rate limiting simulation
+export const createRateLimitedMockClient = (
+  response: any,
+  rateLimitWindowMs = 60000, // 1 minute
+  maxRequests = 100,
+) => {
+  let requestCount = 0;
+  let windowStart = Date.now();
+
+  const queryMock = vi.fn().mockImplementation(async () => {
+    const now = Date.now();
+
+    // Reset counter if window has passed
+    if (now - windowStart > rateLimitWindowMs) {
+      requestCount = 0;
+      windowStart = now;
+    }
+
+    requestCount++;
+
+    if (requestCount > maxRequests) {
+      return Promise.reject(new Error('Rate limit exceeded'));
+    }
+
+    return Promise.resolve(response);
+  });
+
+  return {
+    query: queryMock,
+    mockClient: { query: queryMock } as unknown as SourcegraphClient,
+    queryMock,
+    getRequestCount: () => requestCount,
+    resetRateLimit: () => {
+      requestCount = 0;
+      windowStart = Date.now();
+    },
+  };
+};
+
+// Mock state management for complex scenarios
+export class MockStateManager {
+  private callHistory: Array<{ query: string; variables: any; response: any; timestamp: number }> =
+    [];
+  private readonly currentState = new Map<string, any>();
+  private expectations: Array<{ query?: string; variables?: any; response: any }> = [];
+
+  addCall(query: string, variables: any, response: any) {
+    this.callHistory.push({
+      query,
+      variables,
+      response,
+      timestamp: Date.now(),
+    });
+  }
+
+  getCallHistory() {
+    return this.callHistory;
+  }
+
+  getCallsByQuery(query: string) {
+    return this.callHistory.filter((call) => call.query === query);
+  }
+
+  getLastCall() {
+    return this.callHistory[this.callHistory.length - 1];
+  }
+
+  getCallCount(query?: string) {
+    if (query) {
+      return this.getCallsByQuery(query).length;
+    }
+    return this.callHistory.length;
+  }
+
+  setState(key: string, value: any) {
+    this.currentState.set(key, value);
+  }
+
+  getState(key: string) {
+    return this.currentState.get(key);
+  }
+
+  updateState(key: string, updater: (current: any) => any) {
+    const current = this.getState(key);
+    this.setState(key, updater(current));
+  }
+
+  expectCall(query?: string, variables?: any, response?: any) {
+    this.expectations.push({ query, variables, response });
+  }
+
+  verifyExpectations() {
+    for (const expectation of this.expectations) {
+      const matchingCalls = this.callHistory.filter((call) => {
+        if (expectation.query && call.query !== expectation.query) {
+          return false;
+        }
+        if (
+          expectation.variables &&
+          JSON.stringify(call.variables) !== JSON.stringify(expectation.variables)
+        ) {
+          return false;
+        }
+        return true;
+      });
+
+      if (matchingCalls.length === 0) {
+        throw new Error(`Expected call not found: ${JSON.stringify(expectation)}`);
+      }
+    }
+  }
+
+  reset() {
+    this.callHistory = [];
+    this.currentState.clear();
+    this.expectations = [];
+  }
+}
+
+// Validation helpers to prevent test data drift
+export const validateMockDataIntegrity = (mockData: any, schema: any) => {
+  // Basic validation that required fields exist
+  const validateObject = (obj: any, schemaObj: any, path = '') => {
+    for (const [key, validator] of Object.entries(schemaObj)) {
+      const fullPath = path ? `${path}.${key}` : key;
+
+      if (typeof validator === 'string') {
+        // Type check
+        if (typeof obj[key] !== validator) {
+          throw new Error(
+            `Type mismatch at ${fullPath}: expected ${validator}, got ${typeof obj[key]}`,
+          );
+        }
+      } else if (typeof validator === 'function') {
+        // Custom validator function
+        if (!validator(obj[key])) {
+          throw new Error(`Validation failed at ${fullPath}`);
+        }
+      } else if (typeof validator === 'object') {
+        // Nested object
+        if (obj[key] && typeof obj[key] === 'object') {
+          validateObject(obj[key], validator, fullPath);
+        }
+      }
+    }
+  };
+
+  validateObject(mockData, schema);
+};
+
+export const createMockDataValidator = (schema: any) => (data: any) => {
+  validateMockDataIntegrity(data, schema);
+};
+
+// Pre-defined validation schemas for common mock data
+export const MOCK_DATA_SCHEMAS = {
+  repository: {
+    name: 'string',
+    description: 'string',
+    url: 'string',
+    isPrivate: 'boolean',
+    isFork: 'boolean',
+    isArchived: 'boolean',
+    viewerCanAdminister: 'boolean',
+    mirrorInfo: {
+      cloned: 'boolean',
+      cloneInProgress: 'boolean',
+      cloneProgress: (value: any) => typeof value === 'string' || value === null,
+    },
+    defaultBranch: (value: any) => !value || (typeof value === 'object' && value.displayName),
+    updatedAt: 'string',
+  },
+
+  file: {
+    path: 'string',
+    content: (value: any) => typeof value === 'string' || value === null,
+    byteSize: 'number',
+    isBinary: 'boolean',
+    highlight: {
+      aborted: 'boolean',
+    },
+  },
+
+  commit: {
+    oid: 'string',
+    abbreviatedOID: 'string',
+    subject: 'string',
+    author: {
+      person: {
+        displayName: 'string',
+        email: 'string',
+      },
+      date: 'string',
+    },
+    url: 'string',
+  },
+
+  searchResult: {
+    results: {
+      results: 'object', // Array of result objects
+      matchCount: 'number',
+      limitHit: 'boolean',
+      cloning: 'object', // Array or empty array
+      timedout: 'object', // Array or empty array
+    },
+  },
+
+  user: {
+    username: 'string',
+    email: 'string',
+    displayName: 'string',
+    organizations: {
+      nodes: 'object', // Array of organization objects
+    },
+  },
+};
+
+// Validation helpers with pre-defined schemas
+export const validateMockRepository = (repo: any) => {
+  validateMockDataIntegrity(repo, MOCK_DATA_SCHEMAS.repository);
+};
+
+export const validateMockFile = (file: any) => {
+  validateMockDataIntegrity(file, MOCK_DATA_SCHEMAS.file);
+};
+
+export const validateMockCommit = (commit: any) => {
+  validateMockDataIntegrity(commit, MOCK_DATA_SCHEMAS.commit);
+};
+
+export const validateMockSearchResult = (result: any) => {
+  validateMockDataIntegrity(result, MOCK_DATA_SCHEMAS.searchResult);
+};
+
+export const validateMockUser = (user: any) => {
+  validateMockDataIntegrity(user, MOCK_DATA_SCHEMAS.user);
+};
+
+// Batch validation for multiple mock objects
+export const validateMockBatch = (
+  mocks: Array<{ data: any; type: keyof typeof MOCK_DATA_SCHEMAS }>,
+) => {
+  const errors: Array<{ index: number; error: string }> = [];
+
+  mocks.forEach((mock, index) => {
+    try {
+      validateMockDataIntegrity(mock.data, MOCK_DATA_SCHEMAS[mock.type]);
+    } catch (error) {
+      errors.push({ index, error: error.message });
+    }
+  });
+
+  if (errors.length > 0) {
+    throw new Error(
+      `Mock data validation failed:\n${errors.map((e) => `  [${e.index}]: ${e.error}`).join('\n')}`,
+    );
+  }
+};
+
+// Mock data consistency checker
+export class MockDataConsistencyChecker {
+  private readonly baselineData = new Map<string, any>();
+
+  setBaseline(key: string, data: any) {
+    this.baselineData.set(key, JSON.parse(JSON.stringify(data))); // Deep clone
+  }
+
+  checkConsistency(key: string, currentData: any, ignoreFields: string[] = []) {
+    const baseline = this.baselineData.get(key);
+    if (!baseline) {
+      throw new Error(`No baseline data found for key: ${key}`);
+    }
+
+    const differences = this.findDifferences(baseline, currentData, ignoreFields);
+    if (differences.length > 0) {
+      throw new Error(`Mock data inconsistency for ${key}:\n${differences.join('\n')}`);
+    }
+  }
+
+  private findDifferences(obj1: any, obj2: any, ignoreFields: string[], path = ''): string[] {
+    const differences: string[] = [];
+
+    const keys = new Set([...Object.keys(obj1), ...Object.keys(obj2)]);
+
+    for (const key of keys) {
+      if (ignoreFields.includes(key)) {
+        continue;
+      }
+
+      const fullPath = path ? `${path}.${key}` : key;
+      const val1 = obj1[key];
+      const val2 = obj2[key];
+
+      if (val1 === undefined && val2 !== undefined) {
+        differences.push(`  + ${fullPath}: ${JSON.stringify(val2)} (added)`);
+      } else if (val1 !== undefined && val2 === undefined) {
+        differences.push(`  - ${fullPath}: ${JSON.stringify(val1)} (removed)`);
+      } else if (typeof val1 !== typeof val2) {
+        differences.push(`  ≠ ${fullPath}: ${typeof val1} → ${typeof val2}`);
+      } else if (typeof val1 === 'object' && val1 !== null) {
+        differences.push(...this.findDifferences(val1, val2, ignoreFields, fullPath));
+      } else if (val1 !== val2) {
+        differences.push(`  ≠ ${fullPath}: ${JSON.stringify(val1)} → ${JSON.stringify(val2)}`);
+      }
+    }
+
+    return differences;
+  }
+}
+
+export const createStatefulMockClient = (stateManager: MockStateManager, defaultResponse?: any) => {
+  const queryMock = vi.fn().mockImplementation(async (query, variables) => {
+    stateManager.addCall(query, variables, defaultResponse);
+    return Promise.resolve(defaultResponse);
+  });
+
+  return {
+    query: queryMock,
+    mockClient: { query: queryMock } as unknown as SourcegraphClient,
+    queryMock,
+    stateManager,
+  };
+};
+
+// Convenience functions for verified mock clients
+export const createSearchMockClient = (response?: any) =>
+  createVerifiedMockClient(SEARCH_QUERY, response);
+
+export const createCodeSearchMockClient = (response?: any) =>
+  createVerifiedMockClient(CODE_SEARCH_QUERY, response);
+
+export const createCommitSearchMockClient = (response?: any) =>
+  createVerifiedMockClient(COMMIT_SEARCH_QUERY, response);
+
+export const createSymbolSearchMockClient = (response?: any) =>
+  createVerifiedMockClient(SYMBOL_SEARCH_QUERY, response);
+
+export const createRepoMockClient = (response?: any) =>
+  createVerifiedMockClient(REPO_QUERY, response);
+
+export const createFileMockClient = (response?: any) =>
+  createVerifiedMockClient(FILE_QUERY, response);
+
+export const createFileTreeMockClient = (response?: any) =>
+  createVerifiedMockClient(FILE_TREE_QUERY, response);
+
+export const createBlameMockClient = (response?: any) =>
+  createVerifiedMockClient(BLAME_QUERY, response);
+
+export const createConnectionMockClient = (response?: any) =>
+  createVerifiedMockClient(CONNECTION_QUERY, response);
+
+export const createUserMockClient = (response?: any) =>
+  createVerifiedMockClient(USER_QUERY, response);
 
 // Performance assertion helpers
 export const expectResponseTime = async <T>(
